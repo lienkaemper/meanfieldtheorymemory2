@@ -40,29 +40,45 @@ for i, params in enumerate([params_model_1, params_model_2]):
   
     pivot_cor_df = cor_df.pivot_table(values = 'correlation', index=['relative strength', 'source'], columns = 'pair_group').reset_index()
 
-    print(pivot_cor_df.head())
-    print(pivot_cor_df.columns)
 
-    lambdafunc = lambda x: pd.Series(cor_with_noisy_tagging(x['Tagged vs Tagged'],
+
+    pivot_cor_df["noise"] = False
+    def lambdafunc(x): 
+        result = cor_with_noisy_tagging(x['Tagged vs Tagged'],
                                            x['Tagged vs Non-tagged'],
-                                           x['Non-tagged vs Non-tagged'], p_E, p_P, p_fp, p_fn  ))
-    pivot_cor_df[['Tagged vs Tagged noisy', 
-    'Tagged vs Non-tagged noisy', 
-    'Non-tagged vs Non-tagged noisy']] =  pivot_cor_df.apply(lambdafunc, axis=1)
+                                           x['Non-tagged vs Non-tagged'], p_E, p_P, p_fp, p_fn  )
+        return pd.Series([True, result[0], result[1], result[2]])
 
-    lambdafunc = lambda x: pd.Series(rates_with_noisy_tagging(x['Tagged'],
-                                           x['Non-tagged'], p_E, p_P, p_fp, p_fn  ))
-    pivot_rate_df[['Tagged noisy', 
-    'Non-tagged noisy']] =  pivot_rate_df.apply(lambdafunc, axis=1)
+    noisy_cor_df =  pivot_cor_df.copy()    
+
+    noisy_cor_df[['noise', 'Tagged vs Tagged', 
+    'Tagged vs Non-tagged', 
+    'Non-tagged vs Non-tagged']] =  pivot_cor_df.apply(lambdafunc, axis=1)
+
+    noisy_cor_df = pd.concat([noisy_cor_df, pivot_cor_df])
+
+    print(noisy_cor_df.head())
+
+    def lambdafunc(x): 
+        result = rates_with_noisy_tagging(x['Tagged'],
+                                           x['Non-tagged'], p_E, p_P, p_fp, p_fn  )
+        return pd.Series([True, result[0], result[1]])
+
+    pivot_rate_df["noise"] = False
+    noisy_rate_df =  pivot_rate_df.copy()
+    noisy_rate_df[['noise', 'Tagged', 
+    'Non-tagged']] =  pivot_rate_df.apply(lambdafunc, axis=1)
+    noisy_rate_df = pd.concat([noisy_rate_df, pivot_rate_df])
+
 
 
     #print(pivot_cor_df.head(10))
-    melted_rate_df = pd.melt(pivot_rate_df, id_vars= ["relative strength", "source"], value_vars=['Non-tagged', 'Tagged', 'Tagged noisy', 'Non-tagged noisy'], var_name='Tag', value_name='Value')
-    melted_rate_df.to_csv("results/noisy_rate_df.csv")
+    melted_rate_df = pd.melt(noisy_rate_df, id_vars= ["relative strength", "source", "noise"], value_vars=['Non-tagged', 'Tagged'], var_name='Tag', value_name='rate')
+    melted_rate_df.to_csv("results/noisy_rate_df_{}.csv".format(i))
 
-    print(pivot_cor_df.head())
-    melted_cor_df = pd.melt(pivot_cor_df, id_vars= ["relative strength", "source"], value_vars=['Tagged vs Tagged', 'Tagged vs Non-tagged',  'Non-tagged vs Non-tagged', 'Tagged vs Tagged noisy', 'Tagged vs Non-tagged noisy', 'Non-tagged vs Non-tagged noisy'], var_name='Tag', value_name='Value')
-    melted_cor_df.to_csv("results/noisy_cor_df.csv")
+    print(noisy_cor_df.head())
+    melted_cor_df = pd.melt(noisy_cor_df , id_vars= ["relative strength", "source", "noise"], value_vars=['Tagged vs Tagged', 'Tagged vs Non-tagged',  'Non-tagged vs Non-tagged'], var_name='Tag', value_name='cor')
+    melted_cor_df.to_csv("results/noisy_cor_df_{}.csv".format(i))
 
 
 

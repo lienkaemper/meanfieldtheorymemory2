@@ -29,10 +29,11 @@ for i, params in enumerate([params_model_1, params_model_2]):
 
     y0 = 0.1
 
+
     
-    cor_df = pd.read_csv("results/correlations_pred_by_h_{}.csv".format(i))
+    cor_df = pd.read_csv("results/noisy_cor_df_{}.csv".format(i))
     cor_df = cor_df[cor_df["region"] == "CA1"]
-    rate_df = pd.read_csv("results/rates_pred_by_h_{}.csv".format(i))
+    rate_df = pd.read_csv("results/noisy_rate_df_{}.csv".format(i))
 
     hue_order = ["Tagged vs Tagged", "Tagged vs Non-tagged", "Non-tagged vs Non-tagged"]
     
