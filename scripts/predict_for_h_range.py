@@ -12,12 +12,15 @@ from src.correlation_functions import mean_by_region
 
 
 for i, params in enumerate([params_model_1, params_model_2]):
+
+
     par = params.params()
     N = par.N
     b = par.b
     tstop = par.tstop
     #dt = .02 * tau  # Euler step
     #p = par.p
+
 
     g = par.g
     J = par.J
@@ -44,7 +47,7 @@ for i, params in enumerate([params_model_1, params_model_2]):
         y = y_pred(G, Ns, p_mat, y0)
         W =  hippo_weights(index_dict, A, h,h, g, J)
         y_full =y_pred_from_full_connectivity(W, y0, index_dict)
-        print(np.min(y_full))
+       # print(np.min(y_full))
         Cov_full = cor_from_full_connectivity(W, y0, index_dict)
         Cor_full = np.diag(np.sqrt(1/y_full)) @ Cov_full @ np.diag(np.sqrt(1/y_full))
         Cor_full = mean_by_region(Cor_full, index_dict)
