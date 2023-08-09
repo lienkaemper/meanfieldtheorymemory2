@@ -45,32 +45,11 @@ def y_0_quad(W, y0):
         return result
     root = fsolve(func, x0)
     return root 
-    
-def y_corrected_quad(W, y0):
-    N = W.shape[0]
-    y_0 = y_0_quad(W, y0)
-    result = y_0
-    E, V = np.linalg.eig(W)
-    WV = W @ V
-    Vinv = np.linalg.inv(V)
-    D = np.linalg.inv(np.eye(N) - W)
-    EE = np.zeros((N,N))
-    for m,l in itertools.product(range(N), range(N)):
-        EE[m, l] = 1/(2 - E[m] - E[l])
-    for i in range(N):
-        print(i)
-        diff = 0
-        for j, k, l, m in itertools.product(range(N), range(N), range(N), range(N)):
-            diff += y_0[k] * D[i,j] * WV[j,l] * Vinv[l,k] * WV[j,m] * Vinv[m,k] * EE[m,l]
-        result[i] += (1/(2*np.pi))**2 * diff 
 
-    y =  y_0 + (1/(2*np.pi))**2*np.einsum("k, ij, jl, lk, jm, mk, ml -> i", y_0,  D, WV, Vinv, WV, Vinv, EE)
-    print(y - result )
-    return result
-
-def y_corrected_quad_ein(W, y0):
+def y_corrected_quad(W, y0, y_0):
     N = W.shape[0]
-    y_0 = y_0_quad(W, y0)
+    print("before quad")
+    print("past quadratic")
     E, V = np.linalg.eig(W)
     WV = W @ V
     Vinv = np.linalg.inv(V)
@@ -79,7 +58,6 @@ def y_corrected_quad_ein(W, y0):
     EE = np.zeros((N,N))
     for m,l in itertools.product(range(N), range(N)):
         EE[m, l] = 1/(2 - E[m] - E[l])
-    print(EE)
     y =  y_0 + (1/(2*np.pi))**2*np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0,  D, WV, Vinv, WV, Vinv, EE)
     return y
 
