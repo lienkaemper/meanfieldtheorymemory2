@@ -12,7 +12,7 @@ import numpy as np
 class params:
     def __init__(self):
         self.NCA3Ex = 80
-        self.NCA3In = 20
+        self.NCA3In =20
         self.NCA1Ex = 80
         self.NCA1In = 20
         self.cells_per_region = 2*np.array([int(self.NCA3Ex/2), int(self.NCA3Ex/2), self.NCA3In, int(self.NCA1Ex/2), int(self.NCA1Ex/2), self.NCA1In])
@@ -33,13 +33,14 @@ class params:
              [pIE, pIE, pII, pIE, pIE, pII]])
             
 
-        self.g = 6
+        self.g = 1
         self.N = np.sum( self.cells_per_region )
         self.J  = .25
-        self.tstop = 4*10**5 # simulation time
+        self.tstop = 2*10**5# simulation time
         self.b = np.zeros((self.N,))
         self.dt = 0.02
 
-        self.b[:] = .75 # for threshold-linear and threshold-quadratic transfer functions
+        self.b[:] = 0.1 # for threshold-linear and threshold-quadratic transfer functions
         self.h_range = [1, 1.25, 1.5, 1.75]
-        self.i_plast = 0
+        self.i_plast = 1
+    

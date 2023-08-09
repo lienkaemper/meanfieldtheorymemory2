@@ -1,5 +1,7 @@
 import numpy as np
 from collections import namedtuple
+from scipy.optimize import fsolve
+import itertools 
 
 def J_eff(J, Ns, p):
     J_eff = J.copy()
@@ -18,6 +20,8 @@ def y_pred(J, Ns, p, y0):
     y = np.linalg.inv(np.identity(N) - J_eff(J, Ns, p)) @y
     return y 
 
+
+
 def y_pred_from_full_connectivity(W, y0, index_dict):
     N = W.shape[0]
     B = np.linalg.inv(np.identity(N) - W)
@@ -29,6 +33,54 @@ def y_pred_from_full_connectivity(W, y0, index_dict):
         raise Exception("input y0 must either be a scalar, or match shape of matrix J")
     y = B @ y
     y = np.maximum(y, 0)
+    return y
+
+def y_0_quad(W, y0):
+    N = W.shape[0]
+    x0 = y_pred_from_full_connectivity(W, y0, 0)
+    def func(y):
+        result = -y
+        for i in range(N):
+            result[i] += (np.maximum(0,sum([W[i,j]*y[j] for j in range(N) for k in range(N)]) + y0[i]))**2
+        return result
+    root = fsolve(func, x0)
+    return root 
+    
+def y_corrected_quad(W, y0):
+    N = W.shape[0]
+    y_0 = y_0_quad(W, y0)
+    result = y_0
+    E, V = np.linalg.eig(W)
+    WV = W @ V
+    Vinv = np.linalg.inv(V)
+    D = np.linalg.inv(np.eye(N) - W)
+    EE = np.zeros((N,N))
+    for m,l in itertools.product(range(N), range(N)):
+        EE[m, l] = 1/(2 - E[m] - E[l])
+    for i in range(N):
+        print(i)
+        diff = 0
+        for j, k, l, m in itertools.product(range(N), range(N), range(N), range(N)):
+            diff += y_0[k] * D[i,j] * WV[j,l] * Vinv[l,k] * WV[j,m] * Vinv[m,k] * EE[m,l]
+        result[i] += (1/(2*np.pi))**2 * diff 
+
+    y =  y_0 + (1/(2*np.pi))**2*np.einsum("k, ij, jl, lk, jm, mk, ml -> i", y_0,  D, WV, Vinv, WV, Vinv, EE)
+    print(y - result )
+    return result
+
+def y_corrected_quad_ein(W, y0):
+    N = W.shape[0]
+    y_0 = y_0_quad(W, y0)
+    E, V = np.linalg.eig(W)
+    WV = W @ V
+    Vinv = np.linalg.inv(V)
+    D = np.linalg.inv(np.eye(N) - W)
+    f = np.ones(N)
+    EE = np.zeros((N,N))
+    for m,l in itertools.product(range(N), range(N)):
+        EE[m, l] = 1/(2 - E[m] - E[l])
+    print(EE)
+    y =  y_0 + (1/(2*np.pi))**2*np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0,  D, WV, Vinv, WV, Vinv, EE)
     return y
 
 def c_ij_pred(J, Ns, p, y0):
@@ -84,6 +136,7 @@ def cor_from_full_connectivity(W, y0, index_dict):
     C = B @ np.diag(y) @ B.T
     return C
 
+#this is the version we actually use 
 def C_pred_off_diag(J, Ns, p, y0):
     N = J.shape[0]
     if len(np.shape(y0)) == 0:
@@ -121,3 +174,4 @@ def cor_with_noisy_tagging(c_EE, c_PE, c_PP, p_E, p_P, p_FP,  p_FN):
     c_NT = (p_EgNT*p_EgT)*c_EE + (p_PgNT*p_EgT + p_EgNT*p_PgT)*c_PE + (p_PgT*p_PgNT)*c_PP
     c_NN = (p_EgNT**2)*c_EE + (2*p_EgNT*p_PgNT) *c_PE  + (p_PgNT**2)*c_PP
     return c_TT, c_NT, c_NN
+

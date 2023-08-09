@@ -25,13 +25,19 @@ def weights_from_regions(index_dict, adjacency, macro_weights):
     JJ = np.concatenate(JJ, axis = 0)
     return JJ
 
-def macro_weights(J, h3, h1, g):
-    return J*np.array([[ h3, 1, -g, 0, 0, 0], #CA3E
+def macro_weights(J, h3, h1, g, i_plast =0):
+    # return J*np.array([[ h3, 1, -g+i_plast*(1-h3), 0, 0, 0], #CA3E
+    #                     [1,  1, -g, 0, 0, 0], #CA3P
+    #                     [1,  1, -g, 0, 0, 0],  #CA3I
+    #                     [h1, 1,  0, 0, 0, -g], #CA1E 
+    #                     [1,  1,  0, 0, 0, -g],  #CAIP
+    #                     [1,  1,  0, 1, 1, -g]]) #CA1I
+    return J*np.array([[ h3, 1, -g+i_plast*(1-h3), 0, 0, 0], #CA3E
                         [1,  1, -g, 0, 0, 0], #CA3P
-                        [1,  1, -g, 0, 0, 0],  #CA3I
-                        [h1, 1,  0, 0, 0, -g], #CA1E
+                        [1 + (h3-1)*i_plast,  1, -g, 0, 0, 0],  #CA3I
+                        [h1, 1,  0, 0, 0, -g], #CA1E 
                         [1,  1,  0, 0, 0, -g],  #CAIP
-                        [1,  1,  0, 1, 1, -g]]) #CA1I
+                        [1,  1+ (h3-1)*i_plast,  0, 1, 1, -g]]) #CA1I
 
 def gen_adjacency(cells_per_region, macro_connectivity, regions = ["CA3E", "CA3P", "CA3I", "CA1E", "CA1P", "CA1I"]):
     N = np.sum(cells_per_region)
@@ -53,8 +59,8 @@ def gen_adjacency(cells_per_region, macro_connectivity, regions = ["CA3E", "CA3P
 
 
 
-def hippo_weights(index_dict, adjacency, h3, h1, g, J, regions = ["CA3E", "CA3P", "CA3I", "CA1E", "CA1P", "CA1I"]):
+def hippo_weights(index_dict, adjacency, h3, h1, g, J, i_plast=1,regions = ["CA3E", "CA3P", "CA3I", "CA1E", "CA1P", "CA1I"]):
 
     #need to weight by h, y
-    A =  weights_from_regions(index_dict, adjacency, macro_weights(J, h3, h1, g) )
+    A =  weights_from_regions(index_dict, adjacency, macro_weights(J, h3, h1, g,i_plast) )
     return A

@@ -1,0 +1,15 @@
+\documentclass [12pt]{amsart}
+\usepackage{amssymb,latexsym,amsfonts, amsthm, amsmath, amsrefs, mathtools,color}
+
+\begin{document}
+\begin{figure}
+\includegraphics[width = 5in]{bernstein_abs_draft.pdf}
+\caption{ (A) Rates and correlations of c-Fos tagged cells do not change after contextual fear conditioning. (B) Hippocampal connectivity in our model. Engram cells (E), non-engram cells (P), and inhibitory cells (I). (C) Dependence of rates and correlations in our model upon the relative engram strength. }
+\end{figure}
+Associative memories are hypothesized to be stored as strengthened connectivity between ensembles of pyramidal neurons, termed engram cells. Due to these strengthened connections, stimulating a portion of the engram cells activates the remainder of the engram cells, allowing for memory recall.  Mathematical models predict that strengthening the connectivity between engram cells leads to an increase in both the firing rates of engram cells and the correlations between engram cells during spontaneous activity (Shen \& McNaughton 1996; Amit \& Brunel 1997).  
+To test this model, we combined two-photon calcium imaging with the c-Fos driven TetTag system to identify putative engram neurons for an associative learning task in mice and simultaneously record their population activity. We did not observe an increase in either firing rates of or correlations between c-Fos tagged putative engram cells in CA1 following a contextual fear conditioning task (Figure A). Further, such an increase in rates and correlations of engram cells during spontaneous activity following learning could have deleterious behavioral consequences, such as freezing in the absence of the conditioned stimulus. We recapitulate this prediction in a spiking network in which each neuron’s spike train  $\dot n(t)$ is a Poisson process with intensity $r_i(t) =\max(v_i(t), 0)$ determined by synaptic input via 
+$$\dot v_i(t) = -v(t) + \sum J_{ij} \dot n_j(t) + E$$
+and connectivity modeled on the hippocampus (Figure B). 
+
+ We show that increasing the relative strength of inhibition, both before and after learning, reduces the change in both correlations and rates after learning (Figure C).  We also introduce inhibitory plasticity into our model: engram cells recruit increased inhibition, either from the entire population of inhibitory neurons or from a subpopulation of inhibitory engram cells. We show that this also moderates the increased rates and correlations which happen as we strengthen engram-to-engram synapses. Finally, in order to preserve the ability of the system for stimulating a portion of the engram cells increases the activity of all engram cells, we modify the nonlinearity in the network, replacing the flat threshold-linear activation function with a convex increasing function. 
+\end{document}

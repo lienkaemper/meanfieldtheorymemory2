@@ -42,4 +42,4 @@ class params:
 
         self.b[:] = .75 # for threshold-linear and threshold-quadratic transfer functions
         self.h_range = [1, 1.25, 1.5, 1.75]
-        self.i_plast = 0
+        self.i_plast = 1

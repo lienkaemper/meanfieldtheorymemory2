@@ -2,6 +2,10 @@ import sys
 import numpy as np
 import params_model_1
 import params_model_2
+import params_model_3
+import params_model_4
+
+
 from src.theory import  y_pred,  C_pred_off_diag, J_eff, rates_with_noisy_tagging, cor_with_noisy_tagging
 import matplotlib.pyplot as plt
 from src.generate_connectivity import  macro_weights
@@ -16,7 +20,7 @@ if len(sys.argv) > 1:
 
 plt.rcParams['pdf.fonttype'] = 42 
 
-for i, params in enumerate([params_model_1, params_model_2]):
+for i, params in enumerate([params_model_1, params_model_2, params_model_3, params_model_4]):
     par = params.params()
     p_E = 0.5
     p_P = 0.5

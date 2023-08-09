@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2021)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: supressing_spontaneous_correlation.aux
+The style file: amsrn.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: memory.bib
+You've used 3 entries,
+            1497 wiz_defined-function locations,
+            427 strings with 3263 characters,
+and the built_in function-call counts, 2977 in all, are:
+= -- 139
+> -- 274
+< -- 3
++ -- 55
+- -- 255
+* -- 301
+:= -- 628
+add.period$ -- 0
+call.type$ -- 3
+change.case$ -- 22
+chr.to.int$ -- 9
+cite$ -- 3
+duplicate$ -- 163
+empty$ -- 79
+format.name$ -- 26
+if$ -- 310
+int.to.chr$ -- 0
+int.to.str$ -- 0
+missing$ -- 75
+newline$ -- 46
+num.names$ -- 6
+pop$ -- 151
+preamble$ -- 1
+purify$ -- 19
+quote$ -- 0
+skip$ -- 43
+stack$ -- 0
+substring$ -- 48
+swap$ -- 118
+text.length$ -- 31
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 24
+warning$ -- 0
+while$ -- 41
+width$ -- 0
+write$ -- 104

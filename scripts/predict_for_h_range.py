@@ -1,9 +1,13 @@
 import numpy as np
 import params_model_1
 import params_model_2
+import params_model_3
+import params_model_4
+
+
 from src.theory import  y_pred,  C_pred_off_diag, J_eff, cor_from_full_connectivity, y_pred_from_full_connectivity
 import matplotlib.pyplot as plt
-from src.generate_connectivity import  macro_weights
+from src.generate_connectivity import  macro_weights, gen_adjacency
 import seaborn as sb
 import pandas as pd
 import pickle as pkl
@@ -11,13 +15,13 @@ from src.generate_connectivity import hippo_weights
 from src.correlation_functions import mean_by_region
 
 
-for i, params in enumerate([params_model_1, params_model_2]):
-
-
+for i, params in enumerate([params_model_1, params_model_2, params_model_3, params_model_4]):
+    print("Model {}".format(i))
     par = params.params()
     N = par.N
     b = par.b
     tstop = par.tstop
+    i_plast = par.i_plast
     #dt = .02 * tau  # Euler step
     #p = par.p
 
@@ -28,24 +32,34 @@ for i, params in enumerate([params_model_1, params_model_2]):
     y0 = par.b[0]
     p_mat = par.macro_connectivity
 
+    A, index_dict = gen_adjacency(Ns, p_mat)
 
-    H_range = np.linspace(1, 1.75)
+    # with open("results/index_dict_{}.pkl".format(i), "wb") as file:
+    #     pkl.dump(index_dict, file)
 
-    hue_order = ["Tagged vs Tagged", "Tagged vs Non-tagged", "Non-tagged vs Non-tagged"]
+    # with open("results/adjacency_{}.pkl".format(i), "wb") as file:
+    #     pkl.dump(A, file)
+
+
+    #H_range = np.linspace(1, 1.75)
+    H_range = [1,1.75]
+
     cor_df = pd.DataFrame(columns=["relative strength", "correlation", "pair_group", "source"])
     rate_df = pd.DataFrame(columns=["relative strength", "rate", "type"])
 
-    with open("results/adjacency_{}.pkl".format(i), "rb") as f:
-        A =  pkl.load(f)
+    # with open("results/adjacency_{}.pkl".format(i), "rb") as f:
+    #     A =  pkl.load(f)
 
-    with open("results/index_dict_{}.pkl".format(i), "rb") as f:
-        index_dict =  pkl.load(f)
+    # with open("results/index_dict_{}.pkl".format(i), "rb") as f:
+    #     index_dict =  pkl.load(f)
 
     for h in H_range:
-        G = macro_weights(J, h, h, g)
+        G = macro_weights(J, h, h, g, i_plast)
+        print(G)
         C = C_pred_off_diag(G, Ns, p_mat, y0)
         y = y_pred(G, Ns, p_mat, y0)
-        W =  hippo_weights(index_dict, A, h,h, g, J)
+        print(y)
+        W =  hippo_weights(index_dict, A, h,h, g, J, i_plast)
         y_full =y_pred_from_full_connectivity(W, y0, index_dict)
        # print(np.min(y_full))
         Cov_full = cor_from_full_connectivity(W, y0, index_dict)

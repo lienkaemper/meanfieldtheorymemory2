@@ -8,8 +8,7 @@ from src.theory import y_pred_from_full_connectivity
 import pickle as pkl
 import gc
 
-#for i, params in enumerate([params_model_1, params_model_2]):
-for params in [params_model_2]:
+for i, params in enumerate([params_model_1, params_model_2]):
     i = 1
     print(i)
 
