@@ -35,31 +35,26 @@ def y_pred_from_full_connectivity(W, y0, index_dict):
     y = np.maximum(y, 0)
     return y
 
-def y_0_quad(W, y0):
+def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
     N = W.shape[0]
-    x0 = y_pred_from_full_connectivity(W, y0, 0)
-    def func(y):
-        result = -y
-        for i in range(N):
-            result[i] += (np.maximum(0,sum([W[i,j]*y[j] for j in range(N) for k in range(N)]) + y0[i]))**2
-        return result
-    root = fsolve(func, x0)
-    return root 
+    y = y_pred_from_full_connectivity(W, y0, 0)
+    for i in range(steps):
+        y  = y + dt*(-y + np.maximum(0, (W @ y +y0)**2 ))
+    return y
 
 def y_corrected_quad(W, y0, y_0):
     N = W.shape[0]
     print("before quad")
     print("past quadratic")
-    E, V = np.linalg.eig(W)
+    E, V = np.linalg.eig(np.diag(y_0) @ W)
     WV = W @ V
     Vinv = np.linalg.inv(V)
-    D = np.linalg.inv(np.eye(N) - W)
-    f = np.ones(N)
+    D = np.linalg.inv(np.eye(N) - 2*np.diag(y_0) @W)
+    f = y_0
     EE = np.zeros((N,N))
     for m,l in itertools.product(range(N), range(N)):
         EE[m, l] = 1/(2 - E[m] - E[l])
-    y =  y_0 + (1/(2*np.pi))**2*np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0,  D, WV, Vinv, WV, Vinv, EE)
-    return y
+    return (1/(2*np.pi))*np.einsum("k, j, ij, jl, lk, jm, mk, lm -> i", y_0, f, D, WV, Vinv, WV, Vinv, EE)
 
 def c_ij_pred(J, Ns, p, y0):
     y = y_pred(J, Ns, p, y0)

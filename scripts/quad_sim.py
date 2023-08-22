@@ -31,7 +31,7 @@ N = np.sum(cells_per_region)
 b = 1
 g = 1
 J = .1
-h = 1
+h = 2
 
 pEE = .2
 pIE = .8
@@ -68,7 +68,8 @@ plt.show()
 y_l = y_pred_from_full_connectivity(W, y0, index_dict)
 print("prediction: y_l")
 y_q_0 = y_0_quad(W,y0)
-y_q = y_corrected_quad(W,y0, y_q_0)
+correction = y_corrected_quad(W,y0, y_q_0)
+y_q = y_q_0  + correction 
 print("prediction: y_q")
 
 rates_q = np.array([rate(spktimes_q, i,  tstop = tstop) for i in range(N)])
@@ -86,5 +87,15 @@ plt.show()
 
 plt.figure()
 plt.scatter(y_q_0, rates_q)
+plt.title("quadratic tree level ")
+plt.show()
+
+plt.figure()
+plt.scatter(y_q_0, y_q)
+plt.title("quadratic tree level ")
+plt.show()
+
+plt.figure()
+plt.scatter(y_q_0, correction )
 plt.title("quadratic tree level ")
 plt.show()
