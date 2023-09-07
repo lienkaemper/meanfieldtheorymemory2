@@ -42,3 +42,20 @@ plt.savefig(dir + "/hist_lin_and_quad.pdf")
 
 plt.show()
 
+df = pd.read_csv(dir+"/lin_vs_quad_cor.csv")
+
+df.cov_l= [complex(df.cov_l[i]).real for i in range(len(df.cov_l))]
+df.cov_q = [complex(df.cov_q[i]).real for i in range(len(df.cov_q))]
+
+print(df.head)
+fig, axs = plt.subplots(nrows = 1, ncols = 2)
+axs[0].set_title("linear")
+sns.lineplot(data = df, x = "h", y = "cor_l", hue = df[["region_i", "region_j"]].apply(tuple, axis=1) , ax = axs[0])
+
+
+axs[1].set_title("quadratic")
+sns.lineplot(data = df, x = "h", y = "cor_q", hue = df[["region_i", "region_j"]].apply(tuple, axis=1) , ax = axs[1])
+
+plt.savefig(dir + "/correlations_lin_and_quad.pdf")
+plt.show()
+

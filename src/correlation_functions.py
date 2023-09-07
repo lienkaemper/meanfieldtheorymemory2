@@ -38,7 +38,9 @@ def tot_cross_covariance_matrix(spktimes, inds, dt, tstop):
     C = np.zeros((n,n))
     for c_i, i in enumerate(inds):
         for c_j, j in enumerate(inds):
-            C[c_i,c_j] = tot_cross_covariance(spktimes,i,j,dt,tstop)
+            if i <= j:
+                C[c_i,c_j] = tot_cross_covariance(spktimes,i,j,dt,tstop)
+                C[c_j,c_i] = C[c_i, c_j]
     return C
 
 

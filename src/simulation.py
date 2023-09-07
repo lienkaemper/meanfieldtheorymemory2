@@ -12,8 +12,9 @@ def intensity(v, B=1, v_th=1, p=1):
     
     return B * x**p
 
-def sim_glm_pop(J, E, tstop=100, dt=.01, B=1, v_th=1, p=1, v_r=0, tstim=0, Estim=0, v0=0, maxspikes = 2*10**6):
-
+def sim_glm_pop(J, E, tstop=100, dt=.01, B=1, v_th=1, p=1, v_r=0, tstim=None, Estim=0, v0=0, maxspikes = 2*10**6):
+    if tstim is None:
+        tstim = tstop
     Nt = int(tstop / dt)
     Ntstim = int(tstim / dt)
 
@@ -35,13 +36,14 @@ def sim_glm_pop(J, E, tstop=100, dt=.01, B=1, v_th=1, p=1, v_r=0, tstim=0, Estim
     nspikes = 0
     for t in tqdm(range(1, Nt)):
 
-        if t < Ntstim:
+        if t > Ntstim:
             Et = Estim
         else:
             Et = E
 
         v[t] = v[t-1] + dt*(-v[t-1] + Et) + np.dot(J, n)
 
+       # lam = intensity(v[t], B=B, v_th=v_th, p=p)
         lam = intensity(v[t], B=B, v_th=v_th, p=p)
         lam[lam > 1/dt] = 1/dt
             

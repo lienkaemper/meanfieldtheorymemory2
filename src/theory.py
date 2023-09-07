@@ -9,7 +9,7 @@ def J_eff(J, Ns, p):
     #J_eff = J_eff @ np.diag(Ns)
     return J_eff 
 
-def y_pred(J, Ns, p, y0):
+def y_pred(J, y0):
     N = J.shape[0]
     if len(np.shape(y0)) == 0:
         y = y0 * np.ones(N)
@@ -17,9 +17,9 @@ def y_pred(J, Ns, p, y0):
         y = y0
     else:
         raise Exception("input y0 must either be a scalar, or match shape of matrix J")
-    y = np.linalg.inv(np.identity(N) - J_eff(J, Ns, p)) @y
+    y = np.linalg.inv(np.identity(N) -J) @y
+    y = np.maximum(y, 0)
     return y 
-
 
 
 def y_pred_from_full_connectivity(W, y0, index_dict):
@@ -35,9 +35,23 @@ def y_pred_from_full_connectivity(W, y0, index_dict):
     y = np.maximum(y, 0)
     return y
 
+def y_pred_full(W, y0):
+    N = W.shape[0]
+    B = np.linalg.inv(np.identity(N) - W)
+    if len(np.shape(y0)) == 0:
+        y = y0 * np.ones(N)
+    elif len(y0) == N:
+        y = y0
+    else:
+        raise Exception("input y0 must either be a scalar, or match shape of matrix J")
+    y = B @ y
+    y = np.maximum(y, 0)
+    return y
+
 def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
     N = W.shape[0]
-    y = y_pred_from_full_connectivity(W, y0, 0)
+    #y = y_pred_from_full_connectivity(W, y0, 0)
+    y = .001*np.random.rand(N)
     for i in range(steps):
         y  = y + dt*(-y + np.maximum(0, (W @ y +y0)**2 ))
     return y
@@ -46,28 +60,30 @@ def y_corrected_quad(W, y0, y_0):
     N = W.shape[0]
     print("before quad")
     print("past quadratic")
-    E, V = np.linalg.eig(np.diag(y_0) @ W)
+    E, V = np.linalg.eig(2*np.diag(y_0) @ W)
     WV = W @ V
     Vinv = np.linalg.inv(V)
     D = np.linalg.inv(np.eye(N) - 2*np.diag(y_0) @W)
-    f = y_0
     EE = np.zeros((N,N))
     for m,l in itertools.product(range(N), range(N)):
         EE[m, l] = 1/(2 - E[m] - E[l])
-    return (1/(2*np.pi))*np.einsum("k, j, ij, jl, lk, jm, mk, lm -> i", y_0, f, D, WV, Vinv, WV, Vinv, EE)
+    return (1/(2*np.pi))^2*np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0, D, WV, Vinv, WV, Vinv, EE)
 
-def c_ij_pred(J, Ns, p, y0):
-    y = y_pred(J, Ns, p, y0)
+def c_ij_pred(J, Ns, p, y):
+    #y = y_pred(J, Ns, p, y0)
     C_off_diag = np.zeros((len(Ns), len(Ns)))
     C_diag = np.zeros(len(Ns))
-    for i in range(len(Ns)):
-        for j in range(len(Ns)):
-            C_off_diag[i,j] = p*J[i,j] * y[j] + p*J[j, i] * y[i] + sum([y[k] * J[i, k] * J[j, k] * Ns[k]*p**2 for k in range(len(Ns))])
+    C_off_diag = C_pred_off_diag(J, Ns, p, y)
     for i in range(len(Ns)):
         C_diag[i] = C_off_diag[i, i] + y[i]
+
     C_pair = namedtuple("C_pair", "off_diag diag") 
     result = C_pair(C_off_diag, C_diag)
     return result
+
+def cor_pred(J, Ns, y0):
+    off_diag, diag  = c_ij_pred(J, Ns, 1, y0)
+    return (1/np.sqrt(diag)) *off_diag * (1/(np.sqrt(diag)))[...,None]
 
 def length_1_full(W, y0, index_dict):
     N = W.shape[0]
@@ -109,6 +125,12 @@ def cor_from_full_connectivity(W, y0, index_dict):
     C = B @ np.diag(y) @ B.T
     return C
 
+def covariance_full(W, y):
+    n = W.shape[0]
+    B = np.linalg.inv(np.identity(n) - W)
+    C = B @ np.diag(y) @ B.T
+    return C
+
 #this is the version we actually use 
 def C_pred_off_diag(J, Ns, p, y0):
     N = J.shape[0]
@@ -119,7 +141,7 @@ def C_pred_off_diag(J, Ns, p, y0):
     else:
         raise Exception("input y0 must either be a scalar, or match shape of matrix J")
     D = np.linalg.inv(np.identity(N) - J_eff(J, Ns, p))
-    y =D @ y 
+   # y =D @ y 
     Y = np.diag(y)
     return D @ Y @ (D @ np.diag(1/Ns)).T - np.diag(1/Ns) * Y
 

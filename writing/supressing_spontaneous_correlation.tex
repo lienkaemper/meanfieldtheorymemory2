@@ -43,11 +43,15 @@
 \DeclareMathOperator{\conv}{conv}
 \DeclareMathOperator{\Tr}{Tr}
 
-%ranks 
-\def \monr{\mathrm{mr}} % monomial rank
-\def \radr{\mathrm{rr}} % radon rank
-\def \swr{\mathrm{swr}} % radon rank
-\def \matr{\mathrm{omr}} % matroid rank
+
+\newcommand{\matr}[1]{\mathbf{#1}} % undergraduate algebra version
+%\newcommand{\matr}[1]{#1}          % pure math version
+%\newcommand{\matr}[1]{\bm{#1}}     % ISO complying version
+
+%A_{k\ell}
+\renewcommand{\vec}[1]{\mathbf{#1}} % undergraduate algebra version
+%\renewcommand{\vec}[1]{#1}          % pure math version
+%\renewcommand{\vec}[1]{\bm{#1}}    
 
 %vectors 
 \def \vv{\mathbf v}
@@ -100,6 +104,46 @@ We can translate this to a differential equation for membrane voltage where the 
 \tau \frac{dv_i}{dt} = - v_i + \sum_{j} g_{ij} \frac{dN_j}{dt} + \tau\lambda_i(t)\\
 r_i(t) = \phi(v_i(t))
 \end{align*}
+
+We can use this to write the joint density functional for $\vec v$ and $\vec N$. 
+\small
+\begin{align*}
+p(v, N| \eta, J) &= \prod_{i = 1}^N \prod_{t= 1}^{T-1} \delta(\tau \frac{\Delta v_i}{\Delta t} + v_i - \sum_{j=1}^N J_{ij} \Delta N_j- \tau \lambda_i) \delta(\Delta N- \eta_{it})\\
+p(v, N |\eta, J) &= \int D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \sum_{t= 1}^{T-1}\tilde{v_i} (\tau \frac{\Delta v_i}{\Delta t} + v_i - \sum_{j=1}^N J_{ij} \Delta N_j- \tau \lambda_i) + \tilde{n_i} (\Delta N_{it} - \eta_{it}) \right]\right)\\
+p(v, N|J) &= \int D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \sum_{t= 1}^{T-1}\tilde{v_i} (\tau \frac{\Delta v_i}{\Delta t} + v_i - \sum_{j=1}^N J_{ij} \Delta N_j- \tau \lambda_i) + \tilde{n_i} \Delta N_{it}	- \log(f(v_{it})dt(e^{i \tilde{n_{it}}} -1) +1) \right]\right)
+\end{align*}
+Now, we take the limit as $\Delta t\to 0$, using the Taylor approximation $\log(1 + x) = x$. 
+
+\small
+\begin{align*}
+p(v, N|J) = \int D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \int_0^{T}dt \tilde{v_i} (\tau \frac{ dv_i}{dt} + v_i - \sum_{j=1}^N J_{ij}dN_j- \tau \lambda_i) + \tilde{n_i} d N_{it}	-f(v_{it})dt(e^{i \tilde{n_{it}}} -1) \right]\right)
+\end{align*}
+
+Now, we average this over the connectivity. 
+\small
+\begin{align*}
+p(v, N) =&1 \int d\matr J P(\matr J) p(v, N | J)\\
+p(v, N) =& \int  D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \int_0^{T}dt \tilde{v_i} (\tau \frac{ dv_i}{dt} + v_i - \sum_{j=1}^N J_{ij}dN_j- \tau \lambda_i) + \tilde{n_i} d N_{it}	-f(v_{it})dt(e^{i \tilde{n_{it}}} -1) \right]\right)P(J)d(\matr J)\\
+p(v, N) =& \int  D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \int_0^{T}dt \tilde{v_i} (\tau \frac{ dv_i}{dt} + v_i - \tau \lambda_i) + \tilde{n_i} d N_{it}	-f(v_{it})dt(e^{i \tilde{n_{it}}} -1) \right]\right)\\&\int \exp(- \sum_{j=1}^N J_{ij}dN_j)P(J)d(\matr J)\\
+\end{align*}
+Now, we  not that $\int \exp(- \sum_{j=1}^N \int_0^T J_{ij}dN_j)P(J)d(\matr J)$ is the moment generating functional of $\matr J$, evaluated at  $ \int_0^T dN_j$. 
+Thus, letting $W_J$ denote the cumulant generating functional for $J$, we have 
+\begin{align*}
+p(v, N) =& \int  D \vec{\tilde{v}} D\vec{\tilde{N}}\exp\left(-i\left [\sum_{i = 1}^N \int_0^{T}dt \tilde{v_i} (\tau \frac{ dv_i}{dt} + v_i - \tau \lambda_i) + \tilde{n_i} d N_{it}	-f(v_{it})dt(e^{i \tilde{n_{it}}} -1) + \sum_{j=1}^N W_{J}(\int \tilde{v_i} dN_j) \right]\right)\
+\end{align*}
+Now, by the definition and properties of the cumulant generating function, we have 
+\begin{align*}
+W_{J}(\int \tilde{v_i} dN_j) = \log\left (\int d J_{ij} p(J_{ij})\exp(-(\int \tilde{v_i} dN_j)\right) \\
+W_{J}(\int \tilde{v_i} dN_j) = \sum_{n=1}^\infty \frac{\ll J_{ij}^n\gg }{n!}(\int \tilde{v_i} dN_j)^n 
+\end{align*}
+Now, the cumulants of $\ll J_{ij}^n\gg$ are easy to find, since these are just the cumulants of the Bernoulli distribution. These are 
+\begin{align*}
+\ll J_{ij}\gg = \frac{p \bar J}{N}\\
+\ll J_{ij}^2\gg = (\frac{\bar J}{N})^2(p- p^2)\\
+\end{align*}
+So our justification for truncating is going to be that the $n$-th cumular scales as $N^{-n}$. The problem is that I don't think we can truncate at the first cumulant, even if we are looking to do things at order $\frac 1 N$, because the sum over $N$ will take $O(1/N^2)$ to $O(1/N)$. And since the correlations are $1/N$, we don't want to be sending this to zero. Although, this may be a real problem, not a made-up problem in our self-justification for what we're doing-- it seems like we are genuinely off in estimates of correlation, and this could be why. 
+
+
 
 We compute the expected value of the firing rate for each neuron and the covariance between the spike trains of each pair of neurons in terms of the matrix of filters $\mathbf G(t)$ with entries $\mathbf g_{ij}(t)$. 
 First, we find the expected values of the firing rate, $r_i^* = \abk{\frac{d N_i}{dt} }$ by taking expected values of both sides of \ref{eqn:poisson_rate}, assuming that $\sum_j \mathbf g_{ij} * r^*_j > 0$ and thus dropping the threshold nonlinearity $\phi$. 
