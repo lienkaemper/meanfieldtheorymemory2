@@ -21,6 +21,25 @@ def create_spike_train(spktimes, neuron=0, dt=.01, tstop=100):
     
     return spktrain
 
+def create_spike_train_matrix(spktimes, neurons, dt=.01, tstop=100):
+    
+    '''
+    create a spike train from a list of spike times and neuron indices
+    spktimes: Nspikes x 2, first column is times and second is neurons
+    dt and tstop should match the simulation that created spktimes
+    '''
+    Nt = int(tstop/dt)+1
+    n = len(neurons)
+    spktrain=np.zeros((n, Nt))
+
+    for i, n_i in enumerate(neurons):
+        spktimes_tmp = spktimes[spktimes[:, 1] == n_i][:, 0]
+        spk_indices = spktimes_tmp / dt
+        spk_indices = spk_indices.astype('int')
+        spktrain[i, spk_indices] = 1/dt
+
+    return spktrain
+
 def tot_cross_covariance(spktimes, i, j, dt, tstop ):
     
     spk_i = create_spike_train(spktimes, neuron=i, dt=dt, tstop=tstop)
@@ -43,6 +62,8 @@ def tot_cross_covariance_matrix(spktimes, inds, dt, tstop):
                 C[c_j,c_i] = C[c_i, c_j]
     return C
 
+def tot_cross_covariance_matrix_faster(spktimes, inds, dt, tstop):
+    x = np.zeros((len(inds),))
 
 def create_pop_spike_train(spktimes, neurons, dt=.01, tstop=100):
     Nt = int(tstop/dt)+1
@@ -103,3 +124,34 @@ def mean_by_region(C, index_dict):
                     C_mean[i, j]/= Ns[i]*Ns[j]
         return C_mean
     
+def mean_pop_correlation(spktimes, neurons, dt, tstop):
+    N = len(neurons)
+    spiketrain = create_spike_train_matrix(spktimes, neurons, dt, tstop)
+    spiketrain = spiketrain-np.mean(spiketrain, axis=1, keepdims=True)
+    _, Ctmp = signal.csd(spiketrain, spiketrain, fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False, axis = 1)
+    vars = Ctmp[:,0]
+    vars[vars== 0] = 1
+    scaling = 1/(np.sqrt(vars))
+    spiketrain = spiketrain * scaling[...,None]
+    spiketrain = np.sum(spiketrain, axis = 0)
+    _, Ctmp = signal.csd(spiketrain, spiketrain, fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False)
+    return np.real((Ctmp[0]-N)/(N*(N-1)))
+
+
+def two_pop_correlation(spktimes, neurons1, neurons2, dt, tstop):
+    N1 = len(neurons1)
+    N2 = len(neurons2)
+    pop_spiketrains = []
+    for pop in [neurons1, neurons2]:
+        print(neurons1)
+        spiketrain = create_spike_train_matrix(spktimes,pop, dt, tstop)
+        spiketrain = spiketrain-np.mean(spiketrain, axis=1, keepdims=True)
+        _, Ctmp = signal.csd(spiketrain, spiketrain, fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False, axis = 1)
+        vars = Ctmp[:,0]
+        vars[vars== 0] = 1
+        scaling = 1/(np.sqrt(vars))
+        spiketrain = spiketrain * scaling[...,None]
+        spiketrain = np.sum(spiketrain, axis = 0)
+        pop_spiketrains.append(spiketrain)
+    _, Ctmp = signal.csd(pop_spiketrains[0], pop_spiketrains[1], fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False)
+    return np.real(Ctmp[0]/(N1*N2))

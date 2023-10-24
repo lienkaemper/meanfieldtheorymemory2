@@ -40,14 +40,20 @@ cells_per_region =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
 b_small = .5
 N = np.sum(cells_per_region)
 b = .5*np.ones(N)
+
+
+Ns = np.array([160, 160, 40, 160, 160, 40])
+Ns = np.array([160, 160, 40, 160, 160, 40])
 b[0:N_E] += .1
 b[2*N_E + N_I: 3*N_E + N_I] += .1
-g = 5 
+b[2*N_E: 2*N_E + N_I] += .2
+b[4*N_E+N_I:] += .2
+g = 3
 J = .2
 g_ii = .25
 
 b_stim = np.copy(b)
-b_stim[0:N_stim] += .5
+b_stim[0:N_stim] += 1
 
 
 dt = 0.02
@@ -144,6 +150,7 @@ for i,h in enumerate(h_range):
 
     fig, ax = raster_plot(spktimes_q, range(N), 0, tstop)
     plt.savefig("../results/raster_spikes_q_stim_h={}.pdf".format(h))
+    plt.savefig("../results/raster_spikes_q_stim_h={}.png".format(h))    
     plt.show()
 
     _, spktimes_l = sim_glm_pop(J=W_l, E=b, dt = dt, tstop=tstop,  tstim=tstim, Estim=b_stim, v_th = 0, maxspikes = maxspikes, p = 1)
@@ -153,6 +160,7 @@ for i,h in enumerate(h_range):
 
     fig, ax = raster_plot(spktimes_l, range(N), 0, tstop)
     plt.savefig("../results/raster_spikes_l_stim_h={}.pdf".format(h))
+    plt.savefig("../results/raster_spikes_l_stim_h={}.png".format(h))
     plt.show()
 
 

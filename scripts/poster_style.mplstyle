@@ -6,3 +6,5 @@ xtick.labelsize : 20
 ytick.labelsize : 20
 legend.fontsize : 20
 legend.title_fontsize: 20
+pdf.fonttype: 42
+ps.fonttype: 42

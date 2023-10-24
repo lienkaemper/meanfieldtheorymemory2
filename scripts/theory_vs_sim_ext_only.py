@@ -14,7 +14,6 @@ if len(sys.argv) > 1:
         showfigs = True
 
 
-plt.style.use('paper_style.mplstyle')
 
 for i, params in enumerate([params_model_1, params_model_2]):
     par = params.params()

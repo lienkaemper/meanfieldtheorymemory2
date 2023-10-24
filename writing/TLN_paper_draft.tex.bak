@@ -1,0 +1,88 @@
+	\documentclass [12pt]{amsart}
+\usepackage{amssymb,latexsym,amsfonts, amsthm, amsmath, amsrefs, mathtools,color}
+\usepackage{array}
+\usepackage{enumerate}
+%\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{verbatim}
+\usepackage[margin=1in,twoside=false]{geometry}
+\usepackage{multicol}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage[capitalize]{cleveref}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows}
+
+\usepackage{soul}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Page layout and formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Notation shortcuts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%A_{k\ell}
+
+%\input{shortcuts}
+\def\S{\mathbb{S}}
+\def\cA{\mathcal{A}}
+\def\cL{\mathcal{L}}
+\def\cT{\mathcal{T}}
+\def\cN{\mathcal{N}}
+
+
+
+\def \R {\mathbb R}
+
+%operators 
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\spa}{span}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\Tr}{Tr}
+
+%ranks 
+\def \monr{\mathrm{mr}} % monomial rank
+\def \radr{\mathrm{rr}} % radon rank
+\def \swr{\mathrm{swr}} % radon rank
+\def \matr{\mathrm{omr}} % matroid rank
+
+%vectors 
+\def \vv{\mathbf v}
+\def \w{\mathbf w}	
+\def \s{\mathbf s}
+\def \t{\mathbf t}
+
+\renewcommand{\vec}{\mathbf}	
+
+\newcommand\abk[1]{\langle #1 \rangle}
+
+
+%Theorems
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{ithm}{Theorem}
+\newtheorem{cor}{Corollary}
+
+\newtheorem{lem}{Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem{defn}{Definition}
+\newtheorem{ex}{Example}
+
+
+\newcommand{\inv}{^{-1}}
+
+\usepackage{subcaption}
+
+
+\title{Why do mosquitoes violate the one neuron, one receptor, one glomerulus rule?}
+
+\begin{document}
+
+
+%\bibliography{mosquito}
+%\bibliographystyle{plain}
+\end{document}
+
