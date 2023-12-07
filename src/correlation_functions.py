@@ -95,6 +95,9 @@ def rate(spktimes, neuron=0, dt=.01, tstop=100):
     spktimes_tmp = spktimes[spktimes[:, 1] == neuron][:, 0]
     return len(spktimes_tmp)/tstop
 
+def rates(spktimes, neurons, dt=.01, tstop=100):
+    return np.array([len(spktimes[spktimes[:, 1] == neuron][:, 0])/tstop for neuron in neurons])
+
 def pop_rate(spktimes, neurons, dt=.01, tstop=100):
     spktimes_tmp = create_pop_spike_train(spktimes, neurons, dt, tstop)
     return sum(spktimes_tmp)*dt/tstop
@@ -143,7 +146,6 @@ def two_pop_correlation(spktimes, neurons1, neurons2, dt, tstop):
     N2 = len(neurons2)
     pop_spiketrains = []
     for pop in [neurons1, neurons2]:
-        print(neurons1)
         spiketrain = create_spike_train_matrix(spktimes,pop, dt, tstop)
         spiketrain = spiketrain-np.mean(spiketrain, axis=1, keepdims=True)
         _, Ctmp = signal.csd(spiketrain, spiketrain, fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False, axis = 1)
@@ -155,3 +157,8 @@ def two_pop_correlation(spktimes, neurons1, neurons2, dt, tstop):
         pop_spiketrains.append(spiketrain)
     _, Ctmp = signal.csd(pop_spiketrains[0], pop_spiketrains[1], fs=1/dt, scaling='density', window='bartlett', nperseg=2048, return_onesided=False, detrend=False)
     return np.real(Ctmp[0]/(N1*N2))
+
+def cov_to_cor(mat):
+    d = np.copy(np.diag(mat))
+    d[d== 0] = 1
+    return (1/np.sqrt(d)) *mat * (1/(np.sqrt(d)))[...,None]

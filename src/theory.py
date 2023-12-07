@@ -2,6 +2,9 @@ import numpy as np
 from collections import namedtuple
 from scipy.optimize import fsolve
 import itertools 
+import matplotlib.pyplot as plt
+
+from src.generate_connectivity import macro_weights
 
 def J_eff(J, Ns, p):
     J_eff = J.copy()
@@ -56,14 +59,15 @@ def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
         y  = y + dt*(-y + np.maximum(0, (W @ y +y0)**2 ))
     return y
 
-def y_corrected_quad(W, y0, y_0):
+def y_corrected_quad(W,  y_0, b):
     N = W.shape[0]
     print("before quad")
     print("past quadratic")
-    E, V = np.linalg.eig(2*np.diag(y_0) @ W)
-    WV = W @ V
+    W_lin = W * (2*(W@y_0+b))[...,None]
+    E, V = np.linalg.eig(W_lin)
+    WV = W_lin @ V
     Vinv = np.linalg.inv(V)
-    D = np.linalg.inv(np.eye(N) - 2*np.diag(y_0) @W)
+    D = np.linalg.inv(np.eye(N) - W_lin)
     EE = np.zeros((N,N))
     for m,l in itertools.product(range(N), range(N)):
         EE[m, l] = 1/(2 - E[m] - E[l])
@@ -170,3 +174,17 @@ def cor_with_noisy_tagging(c_EE, c_PE, c_PP, p_E, p_P, p_FP,  p_FN):
     c_NN = (p_EgNT**2)*c_EE + (2*p_EgNT*p_PgNT) *c_PE  + (p_PgNT**2)*c_PP
     return c_TT, c_NT, c_NN
 
+def find_iso_rate(y, h, J, g, g_ii, b, h_i_min, h_i_max,type, n_points = 200):
+    h_is = np.linspace(h_i_min, h_i_max, n_points)
+    y_hs = np.zeros(n_points)
+    for i, h_i in enumerate(h_is): 
+        if type == "linear":
+            y_h =  y_pred(macro_weights(J, h,h ,g, h_i, g_ii),  b)[3]
+            y_hs[i] = y_h
+        elif type == "quadratic": 
+            y_h = y_0_quad(macro_weights(J, h,h ,g, h_i, g_ii),  b, steps = 500)[3]
+            y_hs[i] = y_h
+        if y_h <= y:
+            return h_i
+
+    return h_is[n_points-1]

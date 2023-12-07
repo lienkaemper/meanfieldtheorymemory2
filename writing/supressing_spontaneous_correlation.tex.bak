@@ -195,15 +195,15 @@ The mean input a neuron in each region receives from each region is  given in th
 {\color{purple} Need to scale this by the number of connections}
 
 \[
-G= J \,\, \begin{blockarray}{ccccccc}
+\overline J = J_0 \,\, \begin{blockarray}{ccccccc}
  CA3 E & CA3 P & CA3 I & CA1 E & CA1 P  & CA1 I \\
 \begin{block}{(cccccc)c}
 h & 1 & -g & 0 & 0 & 0 &CA3 E \\
  1 & 1 & -g & 0 & 0 & 0 &CA3 P\\
- 1 & 1 & -g & 0 & 0 & 0 &CA3 I \\
+ 1 & 1 & -g_{II} & 0 & 0 & 0 &CA3 I \\
 h & 1 & 0 & 0 & 0 & -g &CA1 E    \\
 1 & 1 & 0 & 0 & 0 & -g &CA1 P  \\
-1 & 1& 0 & 1 & 1 & -g  &CA1 I  \\
+1 & 1& 0 & 1 & 1 & -g_{II}  &CA1 I  \\
 \end{block}
 \end{blockarray}
  \]
