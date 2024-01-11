@@ -61,8 +61,7 @@ def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
 
 def y_corrected_quad(W,  y_0, b):
     N = W.shape[0]
-    print("before quad")
-    print("past quadratic")
+  
     W_lin = W * (2*(W@y_0+b))[...,None]
     E, V = np.linalg.eig(W_lin)
     WV = W_lin @ V

@@ -557,7 +557,26 @@ Thus we have
 r_i' = \sum_{j, k} (1/2\pi)^2 \frac{f_j''}{2} r_k^0 \hat \Delta_{ij}(0) \sum_{\ell, m} (JV)_{j\ell} V_{\ell k}\inv(JV)_{jm} V\inv_{mk} \left(\frac 1 { 2  - \xi_\ell - \xi_m}\right)
 \end{align*}
 
+\section{Estimate of correlation}
+Population level covariance, estimate, CA1 excitatory neurons only. 
+\begin{align*}
+ \overline{\Sigma} = J_0 ^2 \begin{pmatrix}
+\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h^2 r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}&
+\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\\
+\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}&
+\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\\
+\end{pmatrix}
+\end{align*}
+Population level correlation, estimate, CA1 excitatory neurons only. 
 
+\begin{align*}
+\overline C = J_0 ^2 \begin{pmatrix}
+\left(\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h^2 r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\right) \left (\frac{1}{n_{\text{CA1E}}}\right)&
+\left(\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\right) \left (\frac{1}{\sqrt{n_{\text{CA1E}}n_{\text{CA1P}}}}\right)\\
+\left(\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{h r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\right) \left (\frac{1}{\sqrt{n_{\text{CA1E}}n_{\text{CA1P}}}}\right) &
+\left(\frac{g^2 r_{\text{CA1I}}}{n_{\text{CA1I}}}+\frac{r_{\text{CA3E}}}{n_{\text{CA3E}}}+\frac{r_{\text{CA3P}}}{n_{\text{CA3P}}}\right)\left (\frac{1}{n_{\text{CA1P}}}\right)\\
+\end{pmatrix}
+\end{align*}
 
 \bibliography{memory}
 \bibliographystyle{plain}
