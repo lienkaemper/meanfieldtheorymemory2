@@ -29,11 +29,29 @@ with open(dirname+"/index_dict.pkl", "rb") as file:
 with open(dirname + "/param_dict.pkl", "rb") as file:
     param_dict = pkl.load(file)
 
-
+#to do : shrink and compare!!! before rasterizing! 
 ################################
 
+yticks = [r[0] for r in index_dict.values()]
+neurons = range(270)
+tstop = 250
+with open("../results/fig_1_data/spikes_h={}ext_only_low_inhib.pkl".format(1.0), "rb") as file:
+    spktimes = pkl.load(file)
 
+fig, ax = plt.subplots(figsize = (2.8, 2.1))
+raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks )
+sns.despine()
+plt.savefig("../results/fig_1_data/raster_h=1.pdf")
+plt.show()
 
+with open("../results/fig_1_data/spikes_h={}ext_only_low_inhib.pkl".format(2.0), "rb") as file:
+    spktimes = pkl.load(file)
+
+fig, ax = plt.subplots(figsize = (2.8, 2.1))
+raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks )
+sns.despine()
+plt.savefig("../results/fig_1_data/raster_h=2.pdf")
+plt.show()
 
 
 fig, axs = plt.subplots(2, 2, figsize = (7,4))
@@ -66,8 +84,8 @@ pred_cor_df = pd.read_csv("../results/fig_1_data/pred_cors.csv")
 pred_cor_df = pred_cor_df[pred_cor_df["region_i"].isin(["CA1E", "CA1P"])]
 pred_cor_df = pred_cor_df[pred_cor_df["region_j"].isin(["CA1E", "CA1P"])]
 pred_cor_df["regions"] = pred_cor_df["region_i"] +"\n"+ pred_cor_df["region_j"]
-sns.lineplot(data = pred_rate_df, x = "h", hue = "region", y = "pred_rate",  ax = axs[0,0], errorbar=None)
-sns.scatterplot(data= rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0])
+sns.lineplot(data = norm_pred_rate_df, x = "h", hue = "region", y = "pred_rate",  ax = axs[0,0], errorbar=None)
+sns.scatterplot(data= norm_rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0])
 axs[0,0].get_legend().remove()
 axs[0, 0].set_ylabel("normalized rate")
 
@@ -103,6 +121,6 @@ axs[1,1].get_legend().remove()
 # sns.lineplot(data= pred_cor_df, x = "h", hue = "regions", y = "cor_pred", ax = axs[4,1])
 
 plt.tight_layout()
-plt.savefig("../results/fig_1_data/figure_1_low_inhib_copy_no_norm.pdf")
+plt.savefig("../results/fig_1_data/figure_1_low_inhib.pdf")
 plt.show()
 

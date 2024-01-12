@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import pickle as pkl
-import params_model_1
-import params_model_2
 
 def raster_plot(spktimes, neurons, t_start, t_stop):
     df = pd.DataFrame(spktimes, columns = ["time", "neuron"])

@@ -40,16 +40,17 @@ tstop = 500
 with open("../results/fig_5_data/spikes_h={}high_inhib.pkl".format(1.0), "rb") as file:
     spktimes = pkl.load(file)
 
-fig, ax = plt.subplots()
-raster_plot(spktimes, neurons, 0, tstop, ax = ax)
+yticks = [r[0] for r in index_dict.values()]
+fig, ax = plt.subplots(figsize = (2.8, 2.1))
+raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks)
 plt.savefig("../results/fig_5_data/raster_h=1.pdf")
 plt.show()
 
 with open("../results/fig_5_data/spikes_h={}high_inhib.pkl".format(2.0), "rb") as file:
     spktimes = pkl.load(file)
 
-fig, ax = plt.subplots()
-raster_plot(spktimes, neurons, 0, tstop, ax = ax)
+fig, ax = plt.subplots(figsize = (2.8, 2.1))
+raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks)
 plt.savefig("../results/fig_5_data/raster_h=2.pdf")
 plt.show()
 

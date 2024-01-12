@@ -102,6 +102,18 @@ def length_1_full(W, y0, index_dict):
     C =  Y + W @ Y + Y @ W.T + W @ Y @ W.T
     return C
 
+def length_1_offdiag_cov(W, Ns, y):
+    N = W.shape[0]
+    y_norm = y/N
+    Y = np.diag(y_norm)
+    Cov =   W @ Y + Y @ W.T + W @ Y @ W.T
+    return Cov
+
+def length_1_cor(W, Ns, y):
+    Cov = length_1_offdiag_cov(W, Ns, y)
+    var = np.diag(Cov) + y
+    return (1/np.sqrt(var)) * Cov * (1/(np.sqrt(var)))[...,None]
+
 
 def overall_cor_pred(J, Ns, p, y0):
     C = np.zeros((len(Ns), len(Ns)))
