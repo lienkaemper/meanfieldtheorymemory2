@@ -7,7 +7,7 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, y_pred, cor_pred
+from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, y_pred, cor_pred, length_1_cor
 from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
@@ -47,11 +47,9 @@ g_iis = np.linspace(g_ii_min, g_ii_max, n_points)
 y_before =  np.zeros((n_points, n_points))
 y_after =  np.zeros((n_points, n_points))
 C_ee_before = np.zeros((n_points, n_points))
-C_ep_before = np.zeros((n_points, n_points))
-C_pp_before = np.zeros((n_points, n_points))
 C_ee_after = np.zeros((n_points, n_points))
-C_ep_after = np.zeros((n_points, n_points))
-C_pp_after = np.zeros((n_points, n_points))
+C_ee_before_approx = np.zeros((n_points, n_points))
+C_ee_after_approx = np.zeros((n_points, n_points))
 stability = np.zeros((n_points, n_points))
 h_is= np.zeros((n_points, n_points))
 for i, g in enumerate(gs): 
@@ -67,8 +65,7 @@ for i, g in enumerate(gs):
         #correlations before
         C = cor_pred(G_lin, cells_per_region, y )
         C_ee_before[i,j] = C[3,3]
-        C_ep_before[i,j] = C[3,4]
-        C_pp_after[i,j]  = C[4,4]
+        C_ee_before_approx[i,j] = length_1_cor(G_lin, cells_per_region, y)[3,3]
 
 
         h_i = find_iso_rate(y[3], h_max, J0, g, g_ii, b, h_i_min, h_i_max, "quadratic")
@@ -82,14 +79,14 @@ for i, g in enumerate(gs):
         #correlations after
         C = cor_pred(G_lin, cells_per_region, y )
         C_ee_after[i,j] = C[3,3]
-        C_ep_after[i,j] = C[3,4]
-        C_pp_after[i,j] = C[4,4]
+        C_ee_after_approx[i,j] = length_1_cor(G_lin, cells_per_region, y)[3,3]
         stability[i,j] = np.max(np.linalg.eigvals(np.eye(6) - G_lin)) > 0
 
 g = 3
 g_ii = 0.25
 
 delta_cor = C_ee_after/C_ee_before
+delta_cor_approx = C_ee_after_approx/C_ee_before_approx
 ind = np.argmax(delta_cor)
 i, j = np.unravel_index(ind, (n_points, n_points))
 print(gs[i], g_iis[j])
@@ -105,17 +102,23 @@ with open("../results/fig_5_data/delta_cor.pkl", "wb") as file:
 
 
 
-fig, ax = plt.subplots(figsize=(7,7))
-cs = ax.imshow(delta_cor, origin="lower", extent = (g_ii_min, g_ii_max, g_min, g_max))
-ax.set_xlabel("g_ii")
-ax.set_ylabel("g")
-fig.colorbar(cs)
-ax.scatter(x = [1, g_ii], y = [1, g], color = "red")
-plt.savefig("../results/heatmaps/heatmap_delta_cor_quadratic.pdf")
+fig, axs = plt.subplots(1, 2, figsize=(6, 3))
+cs = axs[0].imshow(delta_cor, origin="lower", extent = (g_ii_min, g_ii_max, g_min, g_max))
+plt.colorbar(cs, ax = axs[0])
+cs = axs[1].imshow(delta_cor_approx, origin="lower", extent = (g_ii_min, g_ii_max, g_min, g_max))
+plt.colorbar(cs, ax = axs[1])
 
+axs[0].set_xlabel("g_ii")
+axs[0].set_ylabel("g")
+axs[1].set_xlabel("g_ii")
+axs[1].set_ylabel("g")
+
+axs[0].scatter(x = [1, g_ii], y = [1, g], color = "red")
+axs[1].scatter(x = [1, g_ii], y = [1, g], color = "red")
+plt.savefig("../results/heatmaps/heatmap_delta_cor_quadratic.pdf")
 plt.show()
 
-
+quit()
 
 
 g = 3
