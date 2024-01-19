@@ -83,8 +83,10 @@ pred_cor_df = pd.read_csv("../results/fig_1_data/pred_cors.csv")
 pred_cor_df = pred_cor_df[pred_cor_df["region_i"].isin(["CA1E", "CA1P"])]
 pred_cor_df = pred_cor_df[pred_cor_df["region_j"].isin(["CA1E", "CA1P"])]
 pred_cor_df["regions"] = pred_cor_df["region_i"] +"\n"+ pred_cor_df["region_j"]
-sns.lineplot(data = norm_pred_rate_df, x = "h", hue = "region", y = "pred_rate",  ax = axs[0,0], errorbar=None)
-sns.scatterplot(data= norm_rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0])
+sns.lineplot(data = pred_rate_df, x = "h", hue = "region", y = "pred_rate",  ax = axs[0,0], errorbar=None)
+sns.lineplot(data = pred_rate_df, x = "h", hue = "region", y = "reduced_rate",  ax = axs[0,0], errorbar=None, linestyle='--')
+
+sns.scatterplot(data= rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0])
 axs[0,0].get_legend().remove()
 axs[0, 0].set_ylabel("normalized rate")
 

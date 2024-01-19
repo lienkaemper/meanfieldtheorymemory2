@@ -9,7 +9,7 @@ import os
 import sys
 
 
-from src.theory import y_pred_from_full_connectivity, y_corrected_quad, y_0_quad, covariance_full
+from src.theory import y_pred_from_full_connectivity, y_corrected_quad, y_0_quad, covariance_full, find_iso_rate
 from src.correlation_functions import rate, mean_by_region, cov_to_cor
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
 
@@ -41,13 +41,13 @@ g_ii = param_dict["g_ii"]
 J0 = param_dict["J"]
 g = param_dict["g"]
 
-
 b_small = param_dict["b"]
+print(param_dict)
 b = np.ones(N)
 for i, key in enumerate(index_dict.keys()):
     b[index_dict[key]] = b_small[i]
 
-n_h = 10
+n_h = 5
 h_range = np.linspace(h_min, h_max, n_h)
 
 region_list = ['' for i in range(N)]
@@ -76,31 +76,37 @@ h_list_cor = [h for h in h_range for i in range(int(N*(N-1)/2))]
 
 pred_rates = []
 pred_cors = []
-regions = []
 reduced_rates = []
+tree_level_rates = []
+regions = []
+
+
 for h in h_range:
-    J =  hippo_weights(index_dict, A, h,h, g, J0, i_plast = 1, g_ii = g_ii)
-    J_small = macro_weights(J = J0, h3 = h, h1 = h, g = g, g_ii = g_ii)
+    J =  hippo_weights(index_dict, A, h,h, g, J0,  g_ii = g_ii)
     y_q = y_0_quad(J,b)
+    #y_q_corrected = y_corrected_quad(J,  y_q, b)
     pred_rates.extend(y_q)
+
+    J_small = macro_weights(J = J0, h3 = h, h1 = h, g = g, g_ii = g_ii)
+    y_q_red = y_0_quad(J_small, b_small)
+    y_red_corrected= y_corrected_quad(J_small,  y_q_red, b_small)
+    y_q_red_long = np.zeros(N)
+    y_tree_level = np.zeros(N)
+    for i, key in enumerate(index_dict):
+        y_q_red_long[index_dict[key]] = y_red_corrected[i]
+        y_tree_level[index_dict[key]] = y_q_red[i]
+    reduced_rates.extend(y_q_red_long)
+    tree_level_rates.extend(y_tree_level)
+
 
     J_lin =J* (2*(J@y_q+b))[...,None]
     pred_covs = covariance_full(J_lin, y_q)
     pred_cors_mat = cov_to_cor(pred_covs)
     pred_cors.extend( pred_cors_mat[np.triu_indices(N,1)])
 
-    y_q_red = y_0_quad(J_small, b_small)
-    y_red_corrected= y_corrected_quad(J_small,  y_q_red, b_small)
-    y_q_red_long = np.zeros(N)
-    for i, key in enumerate(index_dict):
-        y_q_red_long[index_dict[key]] = y_q_red[i]
-    reduced_rates.extend(y_q_red_long)
 
-
-print(len(reduced_rates))
-print(len(pred_rates))
-rate_df = pd.DataFrame({"pred_rate":pred_rates, "h" : h_list, "region": region_list ,  "reduced_rate": reduced_rates})
+rate_df = pd.DataFrame({"pred_rate":pred_rates, "reduced_rate": reduced_rates, "tree_rate": tree_level_rates, "h" : h_list, "region": region_list })
 cor_df = pd.DataFrame({"pred_cor": pred_cors, "region_i" : region_i_list, "region_j": region_j_list, "h": h_list_cor})
 
-rate_df.to_csv("../results/fig_1_data/pred_rates.csv")
-cor_df.to_csv("../results/fig_1_data/pred_cors.csv")
+rate_df.to_csv("../results/strong_sim_data/pred_rates.csv")
+cor_df.to_csv("../results/strong_sim_data/pred_cors.csv")
