@@ -65,19 +65,12 @@ def y_corrected_quad(W,  y_0, b):
     W_lin = W * (2*(W@y_0+b))[...,None]
     E, V = np.linalg.eig(W_lin)
     Vinv = np.linalg.inv(V)
-    print("eig_check:", W_lin - V@np.diag(E)@Vinv)
     WV = W_lin @ V
     D = np.linalg.inv(np.eye(N) - W_lin)
     EE = np.zeros((N,N))
     for m,l in itertools.product(range(N), range(N)):
         EE[m, l] = 1/(2 - E[m] - E[l])
-    print("EE", EE)
-    print("D", D)
-    print("JV", WV)
-    print("V^-1", Vinv)
     M = np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0, D, WV, Vinv, WV, Vinv, EE)
-    print(M)
-
     return y_0 + ((1/(2*np.pi))**2)*M
 
 def c_ij_pred(J, Ns, p, y):
