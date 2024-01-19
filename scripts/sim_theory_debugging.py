@@ -26,14 +26,14 @@ h_range = np.linspace(h_min, h_max, n_h)
 N_E =60
 N_I = 15
 cells_per_region =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
-b_small = [.7, .7, 1, .7, .7, 1]
+b_small = [1, 1, 1.5, 1, 1, 1.5]
 
 
 N = np.sum(cells_per_region)
 b = np.concatenate([b_small[i]*np.ones(cells_per_region[i]) for i in range(6)])
-J0 = .2
+J0 = .3
 
-g = 1
+g = 3
 g_ii = 1
 
 
@@ -42,10 +42,10 @@ tstop = 500
 
 
 
-pEE = 1#.2
-pIE = 1#.8
-pII = 1#.8
-pEI = 1#.8
+pEE = .2
+pIE = .8
+pII = .8
+pEI = .8
 
 
 
@@ -72,13 +72,12 @@ text_file = open("../results/most_recent.txt", "w")
 text_file.write(dirname)
 text_file.close()
 
-A, index_dict = gen_adjacency(cells_per_region, macro_connectivity)
 
-with open(dirname + "/index_dict.pkl", "wb") as file:
-    pkl.dump(index_dict, file)
+# with open(dirname + "/index_dict.pkl", "wb") as file:
+#     pkl.dump(index_dict, file)
 
-with open(dirname + "/adjacency.pkl", "wb") as file:
-    pkl.dump(A, file)
+# with open(dirname + "/adjacency.pkl", "wb") as file:
+#     pkl.dump(A, file)
 
 with open(dirname + "/param_dict.pkl", "wb") as file:
     pkl.dump(dict(zip(parameters, values)), file)
@@ -107,26 +106,29 @@ corrected_rates = []
 
 
 for i in range(trials):
+    A, index_dict = gen_adjacency(cells_per_region, macro_connectivity)
     for k, h in enumerate(h_range):
+
         J =  hippo_weights(index_dict, A, h,h, g, J0,  g_ii = g_ii)
 
         pred_rates = y_0_quad(J, b)
-        J_lin =J* (2*(J@pred_rates+b))[...,None]
+        gain =  2*(J@pred_rates+b)
+        J_lin =J* gain[...,None]
+        print(np.mean(gain))
         pred_covs = covariance_full(J_lin, pred_rates)
         pred_cors_mat = cov_to_cor(pred_covs)
 
         J_small = macro_weights(J = J0, h3 = h, h1 = h, g = g, g_ii = g_ii)
         pred_rates_small = y_0_quad(J_small, b_small)
         rates_corrected = y_corrected_quad(J_small, pred_rates_small, b_small)
-
         max_rate = np.max(pred_rates)
         maxspikes = int(np.floor(N*max_rate*tstop ))
         gc.collect()
         v, spktimes = sim_glm_pop(J=J,  E=b, dt = dt, tstop=tstop,  v_th = 0, maxspikes = maxspikes, p = 2)
         #raster_plot(spktimes=spktimes, neurons = range(N), t_start = 0,  t_stop = 500, )
         #plt.show()
-        #plt.imshow((v[0:500, :]>0).T, cmap='gray')
-        #plt.savefig("../results/debugging_heatmap.png")
+        plt.imshow((v[0:1000, :]>0).T, cmap='gray')
+        plt.savefig("../results/debugging_heatmap.png")
         #plt.show()
 
         with open("../results/strong_sim_data/spikes_h={}.pkl".format(h), "wb") as file:
@@ -136,7 +138,7 @@ for i in range(trials):
             if (region == "CA1E" )or (region == "CA1P" ):
                 neurons = index_dict[region]
                 rates = [rate(spktimes, i, dt, tstop) for i in neurons]
-                corrected_rate = rates_corrected[i]
+               
                 full_rates.extend(rates)
                 mean_rate = np.mean(rates)
                 mean_pred_rate = np.mean(pred_rates[neurons])
@@ -147,6 +149,7 @@ for i in range(trials):
                 hs_list.append(h)
                 full_rate_hs.extend(N_E *[h])
                 is_list.extend(neurons)
+                corrected_rate = rates_corrected[i] - pred_rates_small[i] + mean_pred_rate
                 corrected_rates.append(corrected_rate)
         
 
@@ -183,6 +186,7 @@ full_rate_df.to_csv("../results/strong_sim_data/full_rate_df_high_inhib.csv")
 cor_df = pd.DataFrame({"region_i": regions_i, "region_j": regions_j, "h": cor_hs, "correlation": cors, "pred_correlation": pred_cors})
 cor_df.to_csv("../results/strong_sim_data/cor_df.csv")
 
+plt.figure()
 sns.lineplot(data = rate_df, x = "h", hue = "region", y = "pred_rates",  errorbar=None)
 sns.lineplot(data = rate_df, x = "h", hue = "region", y = "corrected_rates",  errorbar=None, linestyle = "--")
 
