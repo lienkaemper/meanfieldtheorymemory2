@@ -25,8 +25,8 @@ def weights_from_regions(index_dict, adjacency, macro_weights):
     JJ = np.concatenate(JJ, axis = 0)
     return JJ
 
-def macro_weights(J, h3, h1, g, h_i =1, g_ii = 1):
-    return J*np.array([[ h3, 1, -h_i*g, 0, 0, 0], #CA3E
+def macro_weights(J, h3, h1, g, h_i =1, g_ii = 1, h_i_ca3 = 1):
+    return J*np.array([[ h3, 1, -h_i_ca3*g, 0, 0, 0], #CA3E
                         [1,  1, -g, 0, 0, 0], #CA3P
                         [1,  1, -g_ii*g, 0, 0, 0],  #CA3I
                         [h1, 1,  0, 0, 0, -h_i*g], #CA1E 

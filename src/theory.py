@@ -59,6 +59,8 @@ def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
         y  = y + dt*(-y + np.maximum(0, (W @ y +y0)**2 ))
     return y
 
+
+
 def y_corrected_quad(W,  y_0, b):
     N = W.shape[0]
   
@@ -200,3 +202,30 @@ def find_iso_rate(y, h, J, g, g_ii, b, h_i_min, h_i_max,type, n_points = 200):
             return h_i
 
     return h_is[n_points-1]
+
+
+def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_points = 200):
+    h_is = np.linspace(h_i_min, h_i_max, n_points)
+    y_hs = np.zeros(n_points)
+    #first, match ca3
+    for i, h_i3 in enumerate(h_is): 
+        J = macro_weights(J=J0, h1 = h,h3 = h ,g = g, h_i= 1, g_ii = g_ii, h_i_ca3= h_i3)
+        if type == "linear":
+            y_h =  y_pred( J,  b)[0]
+            y_hs[i] = y_h
+        elif type == "quadratic": 
+            y_h = y_0_quad(J,  b, steps = 500)[0]
+            y_hs[i] = y_h
+        if y_h <= yca3:
+            for i, h_i1 in enumerate(h_is): 
+                J = macro_weights(J=J0, h1 = h,h3 = h ,g = g, h_i= h_i1, g_ii = g_ii, h_i_ca3= h_i3)
+                if type == "linear":
+                    y_h =  y_pred( J,  b)[3]
+                    y_hs[i] = y_h
+                elif type == "quadratic": 
+                    y_h = y_0_quad(J,  b, steps = 500)[3]
+                    y_hs[i] = y_h
+                if y_h <= yca1:
+                    return(h_i1, h_i3)
+            return(h_is[n_points-1, h_i3])
+    return (h_is[n_points-1], h_is[n_points-1])

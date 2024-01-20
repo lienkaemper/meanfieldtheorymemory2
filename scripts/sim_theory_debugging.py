@@ -7,7 +7,7 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, y_corrected_quad
+from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad
 from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
@@ -18,7 +18,7 @@ plt.style.use('paper_style.mplstyle')
 h_min = 1
 h_max = 2
 n_h = 5
-trials = 5
+trials = 1
 
 
 h_range = np.linspace(h_min, h_max, n_h)
@@ -26,14 +26,14 @@ h_range = np.linspace(h_min, h_max, n_h)
 N_E =60
 N_I = 15
 cells_per_region =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
-b_small = [1, 1, 1.5, 1, 1, 1.5]
+b_small= [.7, .7, .9, .7, .7, .9]  #without excitability
 
 
 N = np.sum(cells_per_region)
 b = np.concatenate([b_small[i]*np.ones(cells_per_region[i]) for i in range(6)])
-J0 = .3
+J0 = .2
 
-g = 3
+g = 5
 g_ii = 1
 
 
@@ -129,7 +129,7 @@ for i in range(trials):
         #plt.show()
         plt.imshow((v[0:1000, :]>0).T, cmap='gray')
         plt.savefig("../results/debugging_heatmap.png")
-        #plt.show()
+        plt.show()
 
         with open("../results/strong_sim_data/spikes_h={}.pkl".format(h), "wb") as file:
             pkl.dump(spktimes, file)
