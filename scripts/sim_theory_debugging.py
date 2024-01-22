@@ -26,14 +26,14 @@ h_range = np.linspace(h_min, h_max, n_h)
 N_E =60
 N_I = 15
 cells_per_region =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
-b_small= [.7, .7, .9, .7, .7, .9]  #without excitability
+b_small= [.5, .5, .7, .5, .5, .7]  #without excitability
 
 
 N = np.sum(cells_per_region)
 b = np.concatenate([b_small[i]*np.ones(cells_per_region[i]) for i in range(6)])
 J0 = .2
 
-g = 5
+g = 4
 g_ii = 1
 
 

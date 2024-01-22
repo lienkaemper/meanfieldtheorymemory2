@@ -54,9 +54,10 @@ def y_pred_full(W, y0):
 def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
     N = W.shape[0]
     #y = y_pred_from_full_connectivity(W, y0, 0)
-    y = .001*np.random.rand(N)
+    v = np.random.rand(N)
     for i in range(steps):
-        y  = y + dt*(-y + np.maximum(0, (W @ y +y0)**2 ))
+        v  = v + dt*(-v +  W @ np.maximum(0,v )**2+y0)
+    y = v**2
     return y
 
 
@@ -229,3 +230,19 @@ def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_po
                     return(h_i1, h_i3)
             return(h_is[n_points-1, h_i3])
     return (h_is[n_points-1], h_is[n_points-1])
+
+
+def find_iso_rate_input(target_rate, J, h, g, g_ii, b, b0_min = .1, b0_max = 5, p=2, n_points = 200):
+    b0s =  np.linspace(b0_min, b0_max, n_points)
+    y_hs = np.zeros(n_points)
+    for i, b0 in enumerate(b0s): 
+        if p == 1:
+            y_h =  y_pred(macro_weights(J = J, h3 = h,h1 = h ,g = g, g_ii = g_ii),  b0 + b)[3]
+            y_hs[i] = y_h
+        elif p== 2: 
+            y_h = y_0_quad(macro_weights(J = J, h3 = h, h1 = h ,g = g, g_ii = g_ii),  b0 + b, steps = 500)[3]
+            y_hs[i] = y_h
+        if y_h >= target_rate:
+            return b0
+
+    return b0s[n_points-1]
