@@ -128,6 +128,8 @@ plt.show()
 with open("../results/fig_5_data/delta_cor.pkl", "wb") as file:
     pkl.dump(delta_cor, file)
     
+with open("../results/fig_5_data/delta_rate.pkl", "wb") as file:
+    pkl.dump(delta_rate, file)
 
 
 #plot without inhibitiory plasticity 
