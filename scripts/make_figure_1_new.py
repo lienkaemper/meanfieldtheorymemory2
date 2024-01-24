@@ -121,7 +121,7 @@ axs[1,1].get_legend().remove()
 # pred_cor_df["regions"] = pred_cor_df["region_i"] +"\n"+ pred_cor_df["region_j"]
 # sns.lineplot(data= pred_cor_df, x = "h", hue = "regions", y = "cor_pred", ax = axs[4,1])
 
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig("../results/fig_1_data/figure_1_low_inhib.pdf")
 plt.show()
 

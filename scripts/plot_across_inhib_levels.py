@@ -24,6 +24,10 @@ N = np.sum(cells_per_region)
 with open("../results/compare_inhib_levels/df.pkl", "rb") as f:
     df = pkl.load(f)
 
+with open("../results/compare_inhib_levels/theory_df.pkl", "rb") as f:
+    theory_df = pkl.load(f)
+
+
 with open("../results/compare_inhib_levels/index.pkl", "rb") as f:
     index_dict = pkl.load(file = f)
 
@@ -49,15 +53,15 @@ with open("../results/fig_5_data/delta_rate.pkl", "rb") as file:
     delta_rate = pkl.load(file = file)
 
 
-fig, axs = plt.subplot_mosaic([["a", "a", "b", "b", "c", "c"], 
-                               ["a", "a", "d", "d", "e", "e"], 
-                               ["f", "f",  "g", "g",  "h", "i"]], figsize = (12,8))
+fig, axs = plt.subplot_mosaic([["a", "a", "b", "b", "b", "c", "c", "c"], 
+                               ["a", "a", "d", "d", "d", "e", "e", "e"], 
+                               ["f", "f",  "g", "g",  "h", "h", "i", "i"]], figsize = (8, 6))
 
 yticks = [r[0] for r in index_dict.values()]
 
-raster_plot(spktimes =spktimes_low_before, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["b"], yticks=yticks)
+raster_plot(spktimes =spktimes_low_before, neurons = all_neurons, t_start  = 0, t_stop = 250, ax = axs["b"], yticks=yticks)
 axs["b"].set_title("g = 1, h = 1")
-raster_plot(spktimes =spktimes_low_after, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["d"], yticks=yticks)
+raster_plot(spktimes =spktimes_low_after, neurons = all_neurons, t_start  = 0, t_stop = 250, ax = axs["d"], yticks=yticks)
 axs["d"].set_title("g = 1, h = 2")
 
 raster_plot(spktimes =spktimes_high_before, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["c"], yticks=yticks)
@@ -66,23 +70,28 @@ raster_plot(spktimes =spktimes_high_after, neurons = all_neurons, t_start  = 0, 
 axs["e"].set_title("g = 4, h = 2")
 
 
-sns.lineplot(data = df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["f"], label = "Engram vs. engram")
-sns.lineplot(data = df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["f"], label = "Engram vs. non-engram")
-sns.lineplot(data = df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["f"], label = "Non-ngram vs. non-engram")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["f"], label = "Engram vs. engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_ratio", ax = axs["f"])
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["f"], label = "Engram vs. non-engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_ratio", ax = axs["f"])
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["f"], label = "Non-ngram vs. non-engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_ratio", ax = axs["f"])
 axs["f"].set_title("Correlation ratio")
 axs["f"].set_xlabel("Inhibition strength: g")
 axs["f"].set_ylabel("Correlation ratio")
+axs["f"].legend("off")
+axs["f"].get_legend().remove()
+
 
 
 sns.scatterplot(data = df, x = "g", y = "sim_rate_engram_ratio", ax = axs["g"])
-sns.lineplot(data = df, x = "g", y = "pred_rate_engram_ratio", ax = axs["g"], label = "Engram" )
+sns.lineplot(data = theory_df, x = "g", y = "pred_rate_engram_ratio", ax = axs["g"], label = "Engram" )
 sns.scatterplot(data = df, x = "g", y = "sim_rate_non_engram_ratio", ax = axs["g"])
-sns.lineplot(data = df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["g"], label = "Non-engram" )
+sns.lineplot(data = theory_df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["g"], label = "Non-engram" )
 axs["g"].set_title("rate ratio")
 axs["g"].set_xlabel("inhibition strength: g")
 axs["g"].set_ylabel("rate ratio")
-
-
+axs["g"].get_legend().remove()
 
 
 g_min = 0.5
@@ -93,7 +102,8 @@ cs = axs["h"].imshow(delta_cor, origin="lower", extent = (g_ii_min, g_ii_max, g_
 axs["h"].set_xlabel("g_ii")
 axs["h"].set_ylabel("g")
 plt.colorbar(cs, ax = axs["h"])
-axs["h"].set_title("correlation ratio")
+
+
 
 
 cs = axs["i"].imshow(delta_rate, origin="lower", extent = (g_ii_min, g_ii_max, g_min, g_max), vmin = 1, vmax = 1.5)
@@ -104,9 +114,9 @@ axs["i"].set_title("rate ratio")
 
 
 
-
-plt.tight_layout()
 sns.despine(fig = fig)
+plt.tight_layout()
+
 plt.savefig("../results/compare_inhib_levels/plot_fixed_input.pdf")
 
 plt.show()

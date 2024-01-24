@@ -38,7 +38,7 @@ g_max = 4
 g_ii_min = 0
 g_ii_max = 2
 
-n_points = 21
+n_points = 41
 gs = np.linspace(g_min, g_max, n_points)
 g_iis = np.linspace(g_ii_min, g_ii_max, n_points)
 
