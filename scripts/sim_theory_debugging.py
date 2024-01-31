@@ -18,7 +18,7 @@ plt.style.use('paper_style.mplstyle')
 h_min = 1
 h_max = 2
 n_h = 5
-trials = 1
+trials = 5
 
 
 h_range = np.linspace(h_min, h_max, n_h)
@@ -33,12 +33,12 @@ N = np.sum(cells_per_region)
 b = np.concatenate([b_small[i]*np.ones(cells_per_region[i]) for i in range(6)])
 J0 = .2
 
-g = 4
+g = 1
 g_ii = 1
 
 
 dt = 0.02
-tstop = 500
+tstop = 5000
 
 
 
@@ -129,7 +129,7 @@ for i in range(trials):
         #plt.show()
         plt.imshow((v[0:1000, :]>0).T, cmap='gray')
         plt.savefig("../results/debugging_heatmap.png")
-        plt.show()
+       # plt.show()
 
         with open("../results/strong_sim_data/spikes_h={}.pkl".format(h), "wb") as file:
             pkl.dump(spktimes, file)
@@ -185,6 +185,7 @@ full_rate_df.to_csv("../results/strong_sim_data/full_rate_df_high_inhib.csv")
 
 cor_df = pd.DataFrame({"region_i": regions_i, "region_j": regions_j, "h": cor_hs, "correlation": cors, "pred_correlation": pred_cors})
 cor_df.to_csv("../results/strong_sim_data/cor_df.csv")
+cor_df["regions"] = cor_df["region_i"] +"\n"+ cor_df["region_j"]
 
 plt.figure()
 sns.lineplot(data = rate_df, x = "h", hue = "region", y = "pred_rates",  errorbar=None)

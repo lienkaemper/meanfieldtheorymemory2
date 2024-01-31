@@ -79,7 +79,6 @@ def CA1_inherited_cov(J0, g, h, b, N, nterms = None, p = 2):
 
 
 
-
 def CA3_E_from_E(J0, g, h, b, N, nterms = None, p = 2):
     r, J_lin = fp_and_lin(J0, g, h, b, N, p)
     R = np.diag(r/N)

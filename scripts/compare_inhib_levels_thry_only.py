@@ -67,18 +67,17 @@ cors_nn = []
 
 
 for g in gs:
-    #b_iso = find_iso_rate_input(target_rate= y_baseline[3], J = J0, h = 1, g = g, g_ii = g_ii, b = b_small, b0_min = 0, b0_max = 1)
-    b_iso = 0
     for h in [1,2]:
         h_list.append(h)
         g_list.append(g)
         J_new =  macro_weights(J = J0, h3 = h, h1 = h, g = g)
-        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii =     g_ii)
-        y_new = y_0_quad(J_new, b_iso+b_small)
+        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = g_ii)
+        y_new = y_0_quad(J_new,b_small)
+        y_new = y_corrected_quad(J_new,  y_new, b_small)
         ys_pred_engram.append(y_new[3])
         ys_pred_non_engram.append(y_new[4])
 
-        gain =  2*(J_new@y_new+b_iso + b_small)
+        gain =  2*(J_new@y_new+ b_small)
         J_lin =J_new* gain[...,None]
         pred_cors = cor_pred( J = J_lin, Ns = cells_per_region, y0 = y_new)
         cors_ee.append(pred_cors[3,3])

@@ -127,6 +127,20 @@ def mean_by_region(C, index_dict):
                     C_mean[i, j]/= Ns[i]*Ns[j]
         return C_mean
     
+# if C is a vector, computes mean over each region as specified in index dict, returns vector
+# if C is matrix, computes mean of off-diagonal elements over each region as specified in index dict, returns matrix 
+def sum_by_region(J, index_dict):
+    N_regions = len(index_dict)
+    Ns = [len(index_dict[region]) for region in index_dict]
+    if J.ndim == 2:
+        J_sum = np.zeros((N_regions, N_regions))
+        for i, region_i in enumerate(index_dict):
+            for j, region_j in enumerate(index_dict):
+                J_loc =J[np.ix_(index_dict[region_i], index_dict[region_j])]
+                J_sum[i,j] = np.sum(J_loc)/Ns[i]
+        return J_sum
+
+
 def mean_pop_correlation(spktimes, neurons, dt, tstop):
     N = len(neurons)
     spiketrain = create_spike_train_matrix(spktimes, neurons, dt, tstop)

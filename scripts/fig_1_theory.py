@@ -9,8 +9,8 @@ import os
 import sys
 
 
-from src.theory import y_pred_from_full_connectivity, y_corrected_quad, y_0_quad, covariance_full
-from src.correlation_functions import rate, mean_by_region, cov_to_cor
+from src.theory import y_pred_from_full_connectivity, y_corrected_quad, y_0_quad, covariance_full, loop_correction
+from src.correlation_functions import rate, sum_by_region, cov_to_cor
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
 
 
@@ -80,21 +80,27 @@ regions = []
 reduced_rates = []
 for h in h_range:
     J =  hippo_weights(index_dict, A, h,h, g, J0, i_plast = 1, g_ii = g_ii)
-    J_small = macro_weights(J = J0, h3 = h, h1 = h, g = g, g_ii = g_ii)
+    #J_small = macro_weights(J = J0, h3 = h, h1 = h, g = g, g_ii = g_ii)
+    J_small = sum_by_region(J, index_dict=index_dict)
     y_q = y_0_quad(J,b)
-    pred_rates.extend(y_q)
+    
 
-    J_lin =J* (2*(J@y_q+b))[...,None]
-    pred_covs = covariance_full(J_lin, y_q)
-    pred_cors_mat = cov_to_cor(pred_covs)
-    pred_cors.extend( pred_cors_mat[np.triu_indices(N,1)])
 
     y_q_red = y_0_quad(J_small, b_small)
-    y_red_corrected= y_corrected_quad(J_small,  y_q_red, b_small)
+    correction_small = loop_correction(J_small,  y_q_red, b_small)
     y_q_red_long = np.zeros(N)
     for i, key in enumerate(index_dict):
-        y_q_red_long[index_dict[key]] = y_q_red[i]
+        y_q_red_long[index_dict[key]] = np.real(correction_small[i]) +  y_q_red[i]
+        y_q[index_dict[key]] =  y_q_red[i]
+        
+    pred_rates.extend(y_q)
     reduced_rates.extend(y_q_red_long)
+
+
+    J_lin =J* (2*(J@y_q_red_long + b))[...,None]
+    pred_covs = covariance_full(J_lin, y_q_red_long)
+    pred_cors_mat = cov_to_cor(pred_covs)
+    pred_cors.extend( pred_cors_mat[np.triu_indices(N,1)])
 
 
 print(len(reduced_rates))
