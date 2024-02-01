@@ -12,7 +12,7 @@ def raster_plot(spktimes, neurons, t_start, t_stop, yticks = None, ax = None):
     if ax is None:
         fig, ax = plt.subplots()
     s = 1000
-    sns.scatterplot(data = df, x = "time", y = "neuron", marker = "|" , s = s/(2*len(neurons)), ax = ax, hue = "neuron",  palette = ["black"])
+    sns.scatterplot(data = df, x = "time", y = "neuron", marker = "|" , s = s/(.5*len(neurons)), ax = ax, hue = "neuron",  palette = ["black"])
     plt.legend([],[], frameon=False)
     ax.get_legend().remove()
     if yticks is not None:
