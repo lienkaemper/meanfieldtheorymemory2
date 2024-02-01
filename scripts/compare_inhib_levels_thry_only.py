@@ -7,8 +7,8 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad, find_iso_rate_input, cor_pred
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
+from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad, find_iso_rate_input, cor_pred, loop_correction
+from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
 from src.plotting import raster_plot
@@ -48,7 +48,7 @@ J0 = .2
 g_ii = 1
 g_min = 1
 g_max = 5
-n_g = 50
+n_g = 10
 h_h = 2
 gs = np.linspace(g_min, g_max, n_g)
 
@@ -70,16 +70,19 @@ for g in gs:
     for h in [1,2]:
         h_list.append(h)
         g_list.append(g)
-        J_new =  macro_weights(J = J0, h3 = h, h1 = h, g = g)
-        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = g_ii)
-        y_new = y_0_quad(J_new,b_small)
-        y_new = y_corrected_quad(J_new,  y_new, b_small)
-        ys_pred_engram.append(y_new[3])
-        ys_pred_non_engram.append(y_new[4])
+        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = 1/g)
+        J_small = sum_by_region(J, index_dict=index_dict)
 
-        gain =  2*(J_new@y_new+ b_small)
-        J_lin =J_new* gain[...,None]
-        pred_cors = cor_pred( J = J_lin, Ns = cells_per_region, y0 = y_new)
+        y_q_red = y_0_quad(J_small, b_small)
+        correction = np.real(loop_correction(J_small,  y_q_red, b_small))
+        y_corrected = y_q_red + correction 
+
+        ys_pred_engram.append(y_corrected[3])
+        ys_pred_non_engram.append(y_corrected[4])
+
+        gain =  2*(J_small@y_corrected+ b_small)
+        J_lin =J_small* gain[...,None]
+        pred_cors = cor_pred( J = J_lin, Ns = cells_per_region, y0 =y_corrected)
         cors_ee.append(pred_cors[3,3])
         cors_en.append(pred_cors[3,4])
         cors_nn.append(pred_cors[4,4])
