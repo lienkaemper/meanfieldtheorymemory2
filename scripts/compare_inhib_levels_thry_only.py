@@ -70,8 +70,9 @@ for g in gs:
     for h in [1,2]:
         h_list.append(h)
         g_list.append(g)
-        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = 1/g)
-        J_small = sum_by_region(J, index_dict=index_dict)
+        J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = 1)
+       # J_small = sum_by_region(J, index_dict=index_dict)
+        J_small = macro_weights(J0, h, h, g)
 
         y_q_red = y_0_quad(J_small, b_small)
         correction = np.real(loop_correction(J_small,  y_q_red, b_small))
@@ -80,12 +81,15 @@ for g in gs:
         ys_pred_engram.append(y_corrected[3])
         ys_pred_non_engram.append(y_corrected[4])
 
-        gain =  2*(J_small@y_corrected+ b_small)
+        gain =  2*(J_small@y_q_red+ b_small)
         J_lin =J_small* gain[...,None]
-        pred_cors = cor_pred( J = J_lin, Ns = cells_per_region, y0 =y_corrected)
-        cors_ee.append(pred_cors[3,3])
-        cors_en.append(pred_cors[3,4])
-        cors_nn.append(pred_cors[4,4])
+        D = np.linalg.inv(np.eye(6) - J_lin)
+        cov_pred = D @ (np.diag(y_q_red) @ np.diag(1/cells_per_region)) @ D.T - np.diag(y_q_red) @ np.diag(1/cells_per_region)
+       #pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y0 =y_q_red)
+        cov_pred=  (1/np.sqrt(y_q_red)) *cov_pred* (1/(np.sqrt(y_q_red)))[...,None]
+        cors_ee.append(cov_pred[3,3])
+        cors_en.append(cov_pred[3,4])
+        cors_nn.append(cov_pred[4,4])
 
 
 

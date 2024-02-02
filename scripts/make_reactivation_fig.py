@@ -7,8 +7,8 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
+from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred
+from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
 
@@ -20,7 +20,7 @@ plt.style.use('paper_style.mplstyle')
 N_E = 60
 N_I = 15
 cells_per_region =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
-b_small = [.5, .5, .7, .5, .5, .7]
+b_small = np.array([.4, .4, .5, .4, .4, .5]) 
 
 
 N = np.sum(cells_per_region)
@@ -32,8 +32,8 @@ J0 = .2
 
 
 dt = 0.02
-tstop = 40
-tstim = 20
+tstop = 100
+tstim = 50
 
 
 pEE = .2
@@ -69,6 +69,11 @@ text_file.close()
 A, index_dict = gen_adjacency(cells_per_region, macro_connectivity)
 yticks = [r[0] for r in index_dict.values()]
 
+J =  hippo_weights(index_dict, A, h3 = 1, h1 = 1, g = 1, J = J0,  g_ii =  1)
+J_baseline = sum_by_region(J, index_dict=index_dict)
+y_baseline = y_0_quad(J_baseline, b_small)
+
+
 with open(dirname + "/index_dict.pkl", "wb") as file:
     pkl.dump(index_dict, file)
 
@@ -79,11 +84,11 @@ with open(dirname + "/param_dict.pkl", "wb") as file:
     pkl.dump(dict(zip(parameters, values)), file)
 
 min_stim = 0
-max_stim = 1
+max_stim = .5
 n_stim = 50
 stims = np.linspace(min_stim, max_stim, n_stim)
 
-fig, axs = plt.subplots(2,2, figsize = (7, 4))
+fig, axs = plt.subplots(3,2, figsize = (7, 4))
 
 
 # #before learning, low_inhib model
@@ -130,10 +135,10 @@ axs[1,0].plot(stims, result[4, :].T, color = "#06ABC8", label = "Non-engram")
 axs[1,0].set_xlabel("stimulus strength")
 axs[1,0].set_ylabel("rate")
 
-tstop = 100
+tstop = 200
 tstim = 50
-b_stim= np.copy(b)
-b_stim[:int(N_E/2)] += .5
+
+
 
 
 # #before learning, high_inhib model
@@ -152,8 +157,19 @@ b_stim[:int(N_E/2)] += .5
 
 g = 3
 g_ii = 1
+
+
+J =  hippo_weights(index_dict, A, h3 = 1, h1 = 1, g = g, J = J0,  g_ii =  g_ii)
+J_small = sum_by_region(J, index_dict=index_dict)
+b_iso =find_iso_rate_input(target_rate= y_baseline[3], J = J_small, b = b_small, b0_min = 0, b0_max = .5, n_points=1000, plot = False)
+h_i = find_iso_rate(y_baseline[3], 2, J0, g, g_ii, b_iso, h_i_min = 1, h_i_max =2, type = "quadratic")
+b = np.concatenate([b_iso[i]*np.ones(cells_per_region[i]) for i in range(6)])
+b_stim= np.copy(b)
+b_stim[:int(N_E/2)] += .5
+
+
 h = 2
-J =  hippo_weights(index_dict, A, h,h, g, J0, g_ii = g_ii)
+J =  hippo_weights(index_dict, A, h,h, i_plast=h_i, g=g, J=J0, g_ii = g_ii)
 pred_rates = y_0_quad(J, b)
 max_rate = np.max(pred_rates)
 maxspikes = int(np.floor(N*max_rate*tstop ))
@@ -162,18 +178,26 @@ v, spktimes = sim_glm_pop(J=J,  E=b, dt = dt, tstop=tstop, tstim = tstim,  Estim
 raster_plot(spktimes, range(N),0, tstop, yticks = yticks, ax = axs[0,1])
 axs[0,1].set_title(f"g={g}, g_II={g_ii}")
 
-
+J_small = sum_by_region(J, index_dict=index_dict)
 result = np.zeros((6, n_stim))
+result_cors = np.zeros((3,n_stim))
 for i, stim in enumerate(stims):
     b_stim= np.copy(b)
     b_stim[:int(N_E/2)] += stim
     rates = y_0_quad(J, b_stim)
     result[:, i] = mean_by_region(rates, index_dict)
+    pred_cors = cor_pred( J = J_small , Ns = cells_per_region, y0 =result[:,i])
+    result_cors[:, i] = np.array([pred_cors[3,3], pred_cors[3,4], pred_cors[4,4]])
 
 axs[1,1].plot(stims, result[3, :].T, color = "#F37343", label = "Engram")
 axs[1,1].plot(stims, result[4, :].T, color = "#06ABC8", label = "Non-engram")
 axs[1,1].set_xlabel("stimulus strength")
 axs[1,1].set_ylabel("rate")
+
+axs[2, 1].plot(stims, result_cors[0, :], color = "#F37343", label = "Engram-Engram")
+axs[2, 1].plot(stims, result_cors[1, :], label = "Engram vs. non-engram", color = "#FEC20E")
+axs[2, 1].plot(stims, result_cors[2, :], color = "#06ABC8", label = "Non-engram-Non-engram")
+
 plt.tight_layout()
 plt.savefig("../results/reactivation/figure.pdf")
 plt.show() 

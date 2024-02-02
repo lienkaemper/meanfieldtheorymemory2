@@ -28,10 +28,10 @@ def weights_from_regions(index_dict, adjacency, macro_weights):
 def macro_weights(J, h3, h1, g, h_i =1, g_ii = 1, h_i_ca3 = 1):
     return J*np.array([[ h3, 1, -h_i_ca3*g, 0, 0, 0], #CA3E
                         [1,  1, -g, 0, 0, 0], #CA3P
-                        [1,  1, -g_ii*g, 0, 0, 0],  #CA3I
+                        [1,  1, -g_ii, 0, 0, 0],  #CA3I
                         [h1, 1,  0, 0, 0, -h_i*g], #CA1E 
                         [1,  1,  0, 0, 0, -g],  #CAIP
-                        [2,  2,  0, 1, 1, -g_ii*g]]) #CA1I
+                        [2,  2,  0, 1, 1, -g_ii]]) #CA1I
 
 def gen_adjacency(cells_per_region, macro_connectivity, regions = ["CA3E", "CA3P", "CA3I", "CA1E", "CA1P", "CA1I"]):
     N = np.sum(cells_per_region)

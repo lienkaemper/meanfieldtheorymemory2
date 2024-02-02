@@ -246,20 +246,44 @@ def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_po
     return (h_is[n_points-1], h_is[n_points-1])
 
 
-def find_iso_rate_input(target_rate, J, h, g, g_ii, b, b0_min = .1, b0_max = 5, p=2, n_points = 200):
+def find_iso_rate_input(target_rate, J, b, b0_min = .1, b0_max = 5, p=2, n_points = 200, plot = True):
     b0s =  np.linspace(b0_min, b0_max, n_points)
     y_hs = np.zeros(n_points)
     for i, b0 in enumerate(b0s): 
+        b_new = np.copy(b)
+        b_new[2] += b0/2
+        b_new[5] += b0/2
+        b_new[0:2] += b0
+        b_new[3:5] += b0 
         if p == 1:
-            y_h =  y_pred(macro_weights(J = J, h3 = h,h1 = h ,g = g, g_ii = g_ii),  b0 + b)[3]
+            y_h =  y_pred(J,  b_new)[3]
             y_hs[i] = y_h
         elif p== 2: 
-            y_h = y_0_quad(macro_weights(J = J, h3 = h, h1 = h ,g = g, g_ii = g_ii),  b0 + b, steps = 500)[3]
+            y =  y_0_quad(J,  b_new, steps = 500)
+            correction = np.real(loop_correction(J,  y, b_new))
+            y_corrected = y + correction 
+            y_h = y_corrected[3]
             y_hs[i] = y_h
         if y_h >= target_rate:
-            return b0
+            if plot:
+                plt.plot(y_hs[:i], color = "black")
+                plt.hlines(y = [target_rate], xmin = 0, xmax = i, color = "red")
+                plt.show()
+            print(f"from loop {i}")
+            return b_new
+    
+    print("at return")
+    if plot:  
+        plt.plot(y_hs, color = "black")
+        plt.hlines(y = [target_rate], xmin = 0, xmax = n_points, color = "red")
+        plt.show()
 
-    return b0s[n_points-1]
+
+    b_new = np.copy(b)
+    b_new[0:2] +=  b0s[n_points-1]
+    b_new[3:5] +=  b0s[n_points-1]
+
+    return b_new
 
 
 def fp_and_lin(J0, g, h, b, N,  p = 2):

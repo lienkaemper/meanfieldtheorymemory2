@@ -60,12 +60,20 @@ raster_plot(spktimes =spktimes_high_after, neurons = all_neurons, t_start  = 0, 
 #axs["c"].set_title("g = 4, h = 2")
 
 
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["d"], label = "Engram vs. engram")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_ratio", ax = axs["d"], s = size)
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["d"], label = "Engram vs. non-engram")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_ratio", ax = axs["d"], s = size)
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["d"], label = "Non-ngram vs. non-engram")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_ratio", ax = axs["d"], s = size)
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_h=2", ax = axs["d"], color = "#F37343", label = "Engram vs. engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_h=2", ax = axs["d"], s = size, color = "#F37343")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_h=2", ax = axs["d"], label = "Engram vs. non-engram", color = "#FEC20E")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_h=2", ax = axs["d"], s = size, color = "#FEC20E")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_h=2", ax = axs["d"], label = "Non-engram vs. non-engram", color = "#06ABC8")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_h=2", ax = axs["d"], s = size, color = "#06ABC8")
+
+
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_h=1", ax = axs["d"], color = "#F37343", label = "Engram vs. engram", linestyle = "--")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_h=1", ax = axs["d"], s = size, color = "#F37343", marker = "*")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_h=1", ax = axs["d"], label = "Engram vs. non-engram", color = "#FEC20E", linestyle = "--")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_h=1", ax = axs["d"], s = size, color = "#FEC20E", marker = "*")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_h=1", ax = axs["d"], label = "Non-engram vs. non-engram", color = "#06ABC8", linestyle = "--")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_h=1", ax = axs["d"], s = size, color = "#06ABC8",marker = "*")
 axs["d"].set_title("Correlation ratio")
 axs["d"].set_xlabel("Inhibition strength: g")
 axs["d"].set_ylabel("Correlation ratio")
@@ -74,10 +82,10 @@ axs["d"].get_legend().remove()
 
 
 
-sns.scatterplot(data = df, x = "g", y = "sim_rate_engram_ratio", ax = axs["e"], s = size)
-sns.lineplot(data = theory_df, x = "g", y = "pred_rate_engram_ratio", ax = axs["e"], label = "Engram" )
-sns.scatterplot(data = df, x = "g", y = "sim_rate_non_engram_ratio", ax = axs["e"], s = size)
-sns.lineplot(data = theory_df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["e"], label = "Non-engram" )
+sns.scatterplot(data = df, x = "g", y = "sim_rate_engram_ratio", ax = axs["e"], s = size, color = "#F37343")
+sns.lineplot(data = theory_df, x = "g", y = "pred_rate_engram_ratio", ax = axs["e"], label = "Engram", color = "#F37343" )
+sns.scatterplot(data = df, x = "g", y = "sim_rate_non_engram_ratio", ax = axs["e"], s = size, color = "#06ABC8")
+sns.lineplot(data = theory_df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["e"], label = "Non-engram", color = "#06ABC8" )
 axs["e"].set_title("rate ratio")
 axs["e"].set_xlabel("inhibition strength: g")
 axs["e"].set_ylabel("rate ratio")
@@ -176,16 +184,16 @@ axs["h"].plot(gs, E_after + N_after + I_after, label = "after", color = "black")
 axs["h"].set_title("Total")
 
 
-axs["i"].plot(gs, E_before, label = "before",color = "gray")
-axs["i"].plot(gs, E_after, label = "after", color = "black")
+axs["i"].plot(gs, E_before, label = "before",color =  "#F37343", alpha = .5)
+axs["i"].plot(gs, E_after, label = "after",color =  "#F37343", alpha = 1)
 # axs["i"].plot(gs, E_before_approx, label = "before",color = "gray", linestyle = "--")
 # axs["i"].plot(gs, E_after_approx, label = "after", color = "black", linestyle = "--")
 axs["i"].set_title("Engram")
 axs["i"].sharey(axs["h"])
 
 
-axs["j"].plot(gs, N_before, label = "before", color = "gray")
-axs["j"].plot(gs, N_after, label = "after", color = "black")
+axs["j"].plot(gs, N_before, label = "before", color = "#06ABC8", alpha = .5)
+axs["j"].plot(gs, N_after, label = "after",  color = "#06ABC8", alpha = 1)
 # axs["j"].plot(gs, N_before_approx, label = "before", color = "gray", linestyle = "--")
 # axs["j"].plot(gs, N_after_approx, label = "after", color = "black", linestyle = "--")
 axs["j"].set_title("Non-engram")

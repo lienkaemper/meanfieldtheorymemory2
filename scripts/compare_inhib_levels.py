@@ -70,7 +70,7 @@ sim_cors_ee = []
 sim_cors_en = []
 sim_cors_nn = []
 
-for trial in range(5):
+for trial in range(1):
     for g in gs:
         #b_iso = find_iso_rate_input(target_rate= y_baseline[3], J = J0, h = 1, g = g, g_ii = g_ii, b = b_small, b0_min = 0, b0_max = 1)
         b_iso = 0
