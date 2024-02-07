@@ -26,9 +26,14 @@ N = np.sum(cells_per_region)
 with open("../results/compare_inhib_levels/df.pkl", "rb") as f:
     df = pkl.load(f)
 
+with open("../results/compare_inhib_levels/raw_theory_df.pkl", "rb") as f:
+    raw_theory_df = pkl.load(f)
+
 with open("../results/compare_inhib_levels/theory_df.pkl", "rb") as f:
     theory_df = pkl.load(f)
 
+with open("../results/compare_inhib_levels/decomposition_df.pkl", "rb") as f:
+     decomp_df = pkl.load(file = f)
 
 with open("../results/compare_inhib_levels/index.pkl", "rb") as f:
     index_dict = pkl.load(file = f)
@@ -37,10 +42,10 @@ CA1 = list(itertools.chain(index_dict["CA1E"], index_dict["CA1P"]))
 all_neurons = range(N)
 
 
-with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(4.0,1), "rb") as f:
+with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,1), "rb") as f:
     spktimes_high_before = pkl.load(f)
 
-with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(4.0,2), "rb") as f:
+with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,2), "rb") as f:
     spktimes_high_after = pkl.load(f)
 
 
@@ -59,38 +64,38 @@ raster_plot(spktimes =spktimes_high_before, neurons = all_neurons, t_start  = 0,
 raster_plot(spktimes =spktimes_high_after, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["c"], yticks=yticks)
 #axs["c"].set_title("g = 4, h = 2")
 
+baseline_df = raw_theory_df.loc[raw_theory_df["g"] ==1]
+baseline_df = baseline_df.loc[:, ["h", "pred_cor_engram_vs_engram", "pred_cor_engram_vs_non_engram","pred_cor_non_engram_vs_non_engram" ]]
 
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_h=2", ax = axs["d"], color = "#F37343", label = "Engram vs. engram")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_h=2", ax = axs["d"], s = size, color = "#F37343")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_h=2", ax = axs["d"], label = "Engram vs. non-engram", color = "#FEC20E")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_h=2", ax = axs["d"], s = size, color = "#FEC20E")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_h=2", ax = axs["d"], label = "Non-engram vs. non-engram", color = "#06ABC8")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_h=2", ax = axs["d"], s = size, color = "#06ABC8")
+baseline_df = baseline_df.melt(id_vars=['h'], var_name='region', value_name='correlation')
 
-
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_h=1", ax = axs["d"], color = "#F37343", label = "Engram vs. engram", linestyle = "--")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_h=1", ax = axs["d"], s = size, color = "#F37343", marker = "*")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_h=1", ax = axs["d"], label = "Engram vs. non-engram", color = "#FEC20E", linestyle = "--")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_h=1", ax = axs["d"], s = size, color = "#FEC20E", marker = "*")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_h=1", ax = axs["d"], label = "Non-engram vs. non-engram", color = "#06ABC8", linestyle = "--")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_h=1", ax = axs["d"], s = size, color = "#06ABC8",marker = "*")
-axs["d"].set_title("Correlation ratio")
-axs["d"].set_xlabel("Inhibition strength: g")
-axs["d"].set_ylabel("Correlation ratio")
-axs["d"].legend("off")
+print(baseline_df.head())
+sns.barplot(data = baseline_df, x = "region", hue = "h", y = "correlation", ax = axs["d"])
 axs["d"].get_legend().remove()
-
-
-
-sns.scatterplot(data = df, x = "g", y = "sim_rate_engram_ratio", ax = axs["e"], s = size, color = "#F37343")
-sns.lineplot(data = theory_df, x = "g", y = "pred_rate_engram_ratio", ax = axs["e"], label = "Engram", color = "#F37343" )
-sns.scatterplot(data = df, x = "g", y = "sim_rate_non_engram_ratio", ax = axs["e"], s = size, color = "#06ABC8")
-sns.lineplot(data = theory_df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["e"], label = "Non-engram", color = "#06ABC8" )
-axs["e"].set_title("rate ratio")
-axs["e"].set_xlabel("inhibition strength: g")
-axs["e"].set_ylabel("rate ratio")
+axs["d"].set(xticklabels=[])
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["e"], color = "#F37343", label = "Engram vs. engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_ratio", ax = axs["e"], s = size, color = "#F37343")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["e"], label = "Engram vs. non-engram", color = "#FEC20E")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_ratio", ax = axs["e"], s = size, color = "#FEC20E")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["e"], label = "Non-engram vs. non-engram", color = "#06ABC8")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_ratio", ax = axs["e"], s = size, color = "#06ABC8")
+axs["e"].set_xlim([1,3])
+axs["e"].set_title("Correlation ratio")
+axs["e"].set_xlabel("Inhibition strength: g")
+axs["e"].set_ylabel("Correlation ratio")
 axs["e"].get_legend().remove()
 
+
+
+# sns.scatterplot(data = df, x = "g", y = "sim_rate_engram_ratio", ax = axs["e"], s = size, color = "#F37343")
+# sns.lineplot(data = theory_df, x = "g", y = "pred_rate_engram_ratio", ax = axs["e"], label = "Engram", color = "#F37343" )
+# sns.scatterplot(data = df, x = "g", y = "sim_rate_non_engram_ratio", ax = axs["e"], s = size, color = "#06ABC8")
+# sns.lineplot(data = theory_df, x = "g", y = "pred_rate_non_engram_ratio", ax = axs["e"], label = "Non-engram", color = "#06ABC8" )
+# axs["e"].set_title("rate ratio")
+# axs["e"].set_xlabel("inhibition strength: g")
+# axs["e"].set_ylabel("rate ratio")
+# axs["e"].get_legend().remove()
+# axs["e"].set_xlim([1,3])
 
 
 
@@ -99,10 +104,10 @@ axs["e"].get_legend().remove()
 
 J0 = .2
 g_min = 1
-g_max = 4
+g_max = 3
 n_g = 10
 gs = np.linspace(g_min, g_max, n_g)
-b = np.array([.5, .5, .7, .5, .5, .7])
+b = np.array([.4, .4, .5, .4, .4, .5]) 
 N_E =60
 N_I = 15
 Ns =np.array([N_E, N_E, N_I,  N_E, N_E, N_I])
@@ -110,100 +115,51 @@ p= 2
 nterms = 2
 
 
-internal_before = np.array([CA1_internal_cov_offdiag(J0=J0, g=g, h=1,b=b, N=Ns, p = p)[0,0] for g in gs])
-inherited_before = np.array([CA1_inherited_cov(J0=J0, g=g, h=1,b=b, N=Ns, p = p)[0,0] for g in gs])
-ca3_before =  np.array([CA3_internal_cov(J0=J0, g=g, h=1,b=b, N=Ns, p =1)[0,0] for g in gs])
-total_before = internal_before  + inherited_before
+# internal_before = np.array([CA1_internal_cov_offdiag(J0=J0, g=g, h=1,b=b, N=Ns, p = p)[0,0] for g in gs])
+# inherited_before = np.array([CA1_inherited_cov(J0=J0, g=g, h=1,b=b, N=Ns, p = p)[0,0] for g in gs])
+# ca3_before =  np.array([CA3_internal_cov(J0=J0, g=g, h=1,b=b, N=Ns, p =1)[0,0] for g in gs])
+# total_before = internal_before  + inherited_before
 
-internal_after = np.array([CA1_internal_cov_offdiag(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
-inherited_after = np.array([CA1_inherited_cov(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
-#inherited_after_fixed = np.array([CA1_inherited_cov_ca3_fixed(J0=J0, g=g, h=2,b=b, N=Ns, p = p) for g in gs])
+# internal_after = np.array([CA1_internal_cov_offdiag(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
+# inherited_after = np.array([CA1_inherited_cov(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
+# #inherited_after_fixed = np.array([CA1_inherited_cov_ca3_fixed(J0=J0, g=g, h=2,b=b, N=Ns, p = p) for g in gs])
+# ca3_after =  np.array([CA3_internal_cov(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
 
-ca3_after =  np.array([CA3_internal_cov(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
+# total_after = internal_after + inherited_after
+#decomp_df = pd.DataFrame({"g" : g_list, "h" : h_list, "CA1_internal" :  CA1_internal, "CA1_inherited" : CA1_inherited, "CA3" : CA3})
 
-total_after = internal_after + inherited_after
 
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_internal", color = 'blue', style = "h", ax=axs["f"])
 
-axs["f"].plot(gs, internal_before, color ="gray", label = "before")
-axs["f"].plot(gs, internal_after, color ="black", label = "after")
-#axs['f'].legend()
-axs["f"].set_title("Internally generated")
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_inherited", color = "green", style = "h", ax=axs["f"])
+axs["f"].get_legend().remove()
 axs["f"].set_xlabel("Inhibitory strength g")
 axs["f"].set_ylabel("Covariance")
 
-axs["f"].plot(gs, inherited_before, color ="gray", label = "before")
-axs["f"].plot(gs, inherited_after, color ="black", label = "after")
-#axs[1].plot(gs, inherited_after_fixed, color ="black", linestyle = "--", label = "after, CA3 fixed")
-axs["f"].set_title("From CA3")
-#axs["f"].legend()
-
-axs["g"].plot(gs, inherited_before + internal_before , color ="gray", label = "before")
-axs["g"].plot(gs, inherited_after + internal_after, color ="black", label = "after")
+decomp_df["CA1_total"] = decomp_df["CA1_internal"] + decomp_df["CA1_inherited"] 
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_total", style = "h", color = "black", ax=axs["g"])
 #axs[1].plot(gs, inherited_after_fixed, color ="black", linestyle = "--", label = "after, CA3 fixed")
 axs["g"].set_title("Total")
 axs["g"].legend()
 axs["g"].sharey(axs["f"])
+axs["g"].get_legend().remove()
 
 
 
-# fig, ax = plt.subplots(figsize = (3,3))
-# axs["k"].plot(gs, ca3_before, color ="gray", label = "before")
-# ax.plot(gs, ca3_after, color ="black", label = "after")
-# ax.legend()
-# fig.suptitle("CA3, Engram-Engram covariance")
-# fig.supxlabel("Inhibitory strength g")
-# fig.supylabel("Covariance")
-# plt.tight_layout()  
-# plt.show()
+decomp_df["CA3_total"] = decomp_df["from_CA3E"] + decomp_df["from_CA3N"] + decomp_df["from_CA3I"]
 
-
-
-I_before = np.array([CA3_E_from_I(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p) for g in gs])
-I_after = np.array([CA3_E_from_I(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p) for g in gs])
-I_before_approx = np.array([CA3_E_from_I(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-I_after_approx = np.array([CA3_E_from_I(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-
-E_before= np.array([CA3_E_from_E(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p) for g in gs])
-E_after = np.array([CA3_E_from_E(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p) for g in gs])
-E_before_approx= np.array([CA3_E_from_E(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-E_after_approx= np.array([CA3_E_from_E(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-
-N_before =  np.array([CA3_E_from_N(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p) for g in gs])
-N_after = np.array([CA3_E_from_N(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p) for g in gs])
-N_before_approx =  np.array([CA3_E_from_N(J0 = .2, g = g, h = 1, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-N_after_approx = np.array([CA3_E_from_N(J0 = .2, g = g, h = 2, b=b, N=Ns, p = p, nterms = nterms) for g in gs])
-
-tot_before=  np.array([CA3_internal_cov(J0=J0, g=g, h=1,b=b, N=Ns, p = p)[0,0] for g in gs])
-tot_after =  np.array([CA3_internal_cov(J0=J0, g=g, h=2,b=b, N=Ns, p = p)[0,0] for g in gs])
-
-axs["h"].set_ylabel("covariance")
-axs["h"].plot(gs,E_before + N_before + I_before, label = "before", color = "gray")
-axs["h"].plot(gs, E_after + N_after + I_after, label = "after", color = "black")
-#axs["h"].plot(gs,E_before_approx + N_before_approx + I_before_approx, label = "before", color = "gray", linestyle ="--")
-#axs["h"].plot(gs, E_after_approx + N_after_approx + I_after_approx, label = "after", color = "black", linestyle = "--")
+sns.lineplot(data = decomp_df, x = "g", y = "CA3_total", style="h", color= "black", ax = axs["h"])
 axs["h"].set_title("Total")
 
-
-axs["i"].plot(gs, E_before, label = "before",color =  "#F37343", alpha = .5)
-axs["i"].plot(gs, E_after, label = "after",color =  "#F37343", alpha = 1)
-# axs["i"].plot(gs, E_before_approx, label = "before",color = "gray", linestyle = "--")
-# axs["i"].plot(gs, E_after_approx, label = "after", color = "black", linestyle = "--")
+sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3E", style = "h", color =  "#F37343", ax = axs["i"] )
 axs["i"].set_title("Engram")
 axs["i"].sharey(axs["h"])
 
-
-axs["j"].plot(gs, N_before, label = "before", color = "#06ABC8", alpha = .5)
-axs["j"].plot(gs, N_after, label = "after",  color = "#06ABC8", alpha = 1)
-# axs["j"].plot(gs, N_before_approx, label = "before", color = "gray", linestyle = "--")
-# axs["j"].plot(gs, N_after_approx, label = "after", color = "black", linestyle = "--")
+sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3N", style = "h", color = "#06ABC8" ,ax = axs["j"] )
 axs["j"].set_title("Non-engram")
 axs["j"].sharey(axs["h"])
 
-axs["k"].plot(gs, I_before, label = "before", color = "gray")
-axs["k"].plot(gs, I_after, label = "after", color = "black")
-# axs["k"].plot(gs, I_before_approx, label = "before", color = "gray", linestyle = "--")
-# axs["k"].plot(gs, I_after_approx, label = "after", color = "black", linestyle = "--")
-axs["k"].set_title("Inhibitory")
+sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3I", style = "h", color =  "black" ,ax = axs["k"] )
 axs["k"].sharey(axs["h"])
 #axs["k"].yaxis.set_ticklabels([])
 

@@ -53,10 +53,10 @@ def gen_adjacency(cells_per_region, macro_connectivity, regions = ["CA3E", "CA3P
 
 
 
-def hippo_weights(index_dict, adjacency, h3, h1, g, J, i_plast=1, g_ii =1):
+def hippo_weights(index_dict, adjacency, h3, h1, g, J, i_plast=1, i_plast_3 = 1, g_ii =1):
 
     #need to weight by h, y
-    A =  weights_from_regions(index_dict, adjacency, macro_weights(J, h3, h1, g,i_plast, g_ii) )
+    A =  weights_from_regions(index_dict, adjacency, macro_weights( J = J, h3 = h3, h1 = h1, g = g,h_i = i_plast, h_i_ca3=i_plast_3, g_ii = g_ii) )
     return A
 
 def excitatory_weights(J, h):

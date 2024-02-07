@@ -229,18 +229,22 @@ def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_po
             y_h =  y_pred( J,  b)[0]
             y_hs[i] = y_h
         elif type == "quadratic": 
-            y_h = y_0_quad(J,  b, steps = 500)[0]
-            y_hs[i] = y_h
-        if y_h <= yca3:
+            y_h = y_0_quad(J,  b)
+            correction = np.real(loop_correction(J,  y_h, b))
+            y_h += np.real(correction )
+            y_hs[i] = y_h[0]
+        if y_h[0] <= yca3:
             for i, h_i1 in enumerate(h_is): 
                 J = macro_weights(J=J0, h1 = h,h3 = h ,g = g, h_i= h_i1, g_ii = g_ii, h_i_ca3= h_i3)
                 if type == "linear":
                     y_h =  y_pred( J,  b)[3]
                     y_hs[i] = y_h
                 elif type == "quadratic": 
-                    y_h = y_0_quad(J,  b, steps = 500)[3]
-                    y_hs[i] = y_h
-                if y_h <= yca1:
+                    y_h = y_0_quad(J,  b)
+                    correction = np.real(loop_correction(J,  y_h, b))
+                    y_h += np.real(correction )
+                    y_hs[i] = y_h[3]
+                if y_h[3] <= yca1:
                     return(h_i1, h_i3)
             return(h_is[n_points-1, h_i3])
     return (h_is[n_points-1], h_is[n_points-1])
@@ -251,8 +255,8 @@ def find_iso_rate_input(target_rate, J, b, b0_min = .1, b0_max = 5, p=2, n_point
     y_hs = np.zeros(n_points)
     for i, b0 in enumerate(b0s): 
         b_new = np.copy(b)
-        b_new[2] += b0/2
-        b_new[5] += b0/2
+        b_new[2] += 0
+        b_new[5] += 0
         b_new[0:2] += b0
         b_new[3:5] += b0 
         if p == 1:
@@ -299,8 +303,9 @@ def fp_and_lin(J0, g, h, b, N,  p = 2):
    
 
 
-def CA3_prop(J0, g, h, b, N, nterms = None, p = 2):
-    _, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA3_prop(J, r, b, N, nterms = None, p = 2):
+    gain =  2*(J@r+b)
+    J_lin =J* gain[...,None]
     J_CA3 = J_lin[:3, :3]
     if nterms != None:
         Delta = np.identity(3)
@@ -311,8 +316,9 @@ def CA3_prop(J0, g, h, b, N, nterms = None, p = 2):
     return Delta
 
 
-def CA1_prop(J0, g, h, b, N, nterms = None, p = 2):
-    _, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA1_prop(J, r, b, N, nterms = None, p = 2):
+    gain =  2*(J@r+b)
+    J_lin =J* gain[...,None]
     J_CA1 = J_lin[3:, 3:]
     if nterms != None:
         Delta = np.identity(3)
@@ -323,58 +329,49 @@ def CA1_prop(J0, g, h, b, N, nterms = None, p = 2):
     return Delta
 
 
-def CA1_internal_cov(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA1_internal_cov(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R1 = R[3:, 3:]
-    D_11 = CA1_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_11 = CA1_prop(J, r, b, N, nterms =nterms, p = p)
     return D_11 @ R1 @ D_11.T
 
-def CA1_internal_cov_offdiag(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA1_internal_cov_offdiag(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R1 = R[3:, 3:]
-    D_11 = CA1_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_11 = CA1_prop(J, r, b, N, nterms =nterms, p = p)
     return D_11 @ R1 @ D_11.T - R1
 
-def CA3_internal_cov(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA3_internal_cov(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    J_CA3 = J_lin[:3, :3]
-    D_33 = CA3_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
     return (D_33 @ R3 @ D_33.T)
 
 
-def CA1_inherited_cov(J0, g, h, b, N, nterms = None, p = 2):
-    C_33 = CA3_internal_cov(J0, g, h, b, N, nterms = nterms, p = p)
-    _, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA1_inherited_cov(J, r, b, N, nterms = None, p = 2):
+    C_33 = CA3_internal_cov(J, r, b, N, nterms = nterms, p = p)
+    gain =  2*(J@r+b)
+    J_lin =J* gain[...,None]
     J_13 = J_lin[3:, :3]
-    D_11 = CA1_prop(J0, g, h, b, N, nterms = nterms, p = p)
+    D_11 = CA1_prop(J, r, b, N, nterms = nterms, p = p)
     return (D_11 @ J_13 @ C_33 @ J_13.T @ D_11.T)
 
 
 
-def CA3_E_from_E(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA3_E_from_E(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    J_CA3 = J_lin[:3, :3]
-    D_33 = CA3_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
     return D_33[0,0]**2 * R3[0,0]
 
-def CA3_E_from_N(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA3_E_from_N(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    J_CA3 = J_lin[:3, :3]
-    D_33 = CA3_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
     return D_33[0,1]**2 * R3[1,1]
 
-def CA3_E_from_I(J0, g, h, b, N, nterms = None, p = 2):
-    r, J_lin = fp_and_lin(J0, g, h, b, N, p)
+def CA3_E_from_I(J, r, b, N, nterms = None, p = 2):
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    J_CA3 = J_lin[:3, :3]
-    D_33 = CA3_prop(J0, g, h, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
     return D_33[0,2]**2 * R3[2,2]

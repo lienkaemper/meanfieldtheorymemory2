@@ -7,7 +7,7 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred
+from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred, find_iso_rate_ca3
 from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
@@ -84,7 +84,7 @@ with open(dirname + "/param_dict.pkl", "wb") as file:
     pkl.dump(dict(zip(parameters, values)), file)
 
 min_stim = 0
-max_stim = .5
+max_stim = 1
 n_stim = 50
 stims = np.linspace(min_stim, max_stim, n_stim)
 
@@ -171,14 +171,14 @@ g_ii = 1
 J =  hippo_weights(index_dict, A, h3 = 1, h1 = 1, g = g, J = J0,  g_ii =  g_ii)
 J_small = sum_by_region(J, index_dict=index_dict)
 b_iso =find_iso_rate_input(target_rate= y_baseline[3], J = J_small, b = b_small, b0_min = 0, b0_max = .5, n_points=1000, plot = False)
-h_i = find_iso_rate(y_baseline[3], 2, J0, g, g_ii, b_iso, h_i_min = 1, h_i_max =2, type = "quadratic")
+h_i1, h_i3  = find_iso_rate_ca3(y_baseline[3],y_baseline[4], h=h, J0 = J0, g=g, g_ii=g_ii, b = b_iso, h_i_min = 1, h_i_max = 4, type = "quadratic", n_points = 1000)
 b = np.concatenate([b_iso[i]*np.ones(cells_per_region[i]) for i in range(6)])
 b_stim= np.copy(b)
-b_stim[:int(N_E/2)] += .5
+b_stim[:int(N_E/2)] += .8
 
 
 h = 2
-J =  hippo_weights(index_dict, A, h,h, i_plast=h_i, g=g, J=J0, g_ii = g_ii)
+J =  hippo_weights(index_dict, A, h,h, i_plast=h_i1, i_plast_3=h_i3, g=g, J=J0, g_ii = g_ii)
 pred_rates = y_0_quad(J, b)
 max_rate = np.max(pred_rates)
 maxspikes = int(np.floor(N*max_rate*tstop ))
