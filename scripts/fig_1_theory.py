@@ -9,9 +9,9 @@ import os
 import sys
 
 
-from src.theory import y_pred_from_full_connectivity, y_corrected_quad, y_0_quad, covariance_full, loop_correction, cor_pred
-from src.correlation_functions import rate, sum_by_region, cov_to_cor
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
+from src.theory import y_0_quad, loop_correction, cor_pred
+from src.correlation_functions import sum_by_region
+from src.generate_connectivity import  hippo_weights
 
 
 

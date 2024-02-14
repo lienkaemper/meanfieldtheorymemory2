@@ -6,13 +6,11 @@ import matplotlib.pyplot as plt
 
 from src.generate_connectivity import macro_weights
 
-def J_eff(J, Ns, p):
-    J_eff = J.copy()
-   # J_eff *= p
-    #J_eff = J_eff @ np.diag(Ns)
-    return J_eff 
 
 def y_pred(J, y0):
+    ''' Given a connectivity matrix J and input y0, returns the tree-level rate in a linear model, 
+        i.e. returns the rate y that solves y = J y + y0
+    '''
     N = J.shape[0]
     if len(np.shape(y0)) == 0:
         y = y0 * np.ones(N)
@@ -25,35 +23,18 @@ def y_pred(J, y0):
     return y 
 
 
-def y_pred_from_full_connectivity(W, y0, index_dict):
-    N = W.shape[0]
-    B = np.linalg.inv(np.identity(N) - W)
-    if len(np.shape(y0)) == 0:
-        y = y0 * np.ones(N)
-    elif len(y0) == N:
-        y = y0
-    else:
-        raise Exception("input y0 must either be a scalar, or match shape of matrix J")
-    y = B @ y
-    y = np.maximum(y, 0)
-    return y
-
-def y_pred_full(W, y0):
-    N = W.shape[0]
-    B = np.linalg.inv(np.identity(N) - W)
-    if len(np.shape(y0)) == 0:
-        y = y0 * np.ones(N)
-    elif len(y0) == N:
-        y = y0
-    else:
-        raise Exception("input y0 must either be a scalar, or match shape of matrix J")
-    y = B @ y
-    y = np.maximum(y, 0)
-    return y
 
 def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
+    ''' Given a connectivity matrix W and input y0, returns the tree-level rate in a quadratic model, 
+        i.e. returns the rate y that solves y = (W y + y0)**2
+    '''
     N = W.shape[0]
-    #y = y_pred_from_full_connectivity(W, y0, 0)
+    if len(np.shape(y0)) == 0:
+        y = y0 * np.ones(N)
+    elif len(y0) == N:
+        y = y0
+    else:
+        raise Exception("input y0 must either be a scalar, or match shape of matrix J")
     v = np.random.rand(N)
     for i in range(steps):
         v  = v + dt*(-v +  W @ np.maximum(0,v )**2+y0)
@@ -61,22 +42,10 @@ def y_0_quad(W, y0, steps = 1000,  dt = 0.1):
     return y
 
 
-
-def y_corrected_quad(W,  y_0, b):
-    N = W.shape[0]
-  
-    W_lin = W * (2*(W@y_0+b))[...,None]
-    E, V = np.linalg.eig(W_lin)
-    Vinv = np.linalg.inv(V)
-    WV = W_lin @ V
-    D = np.linalg.inv(np.eye(N) - W_lin)
-    EE = np.zeros((N,N))
-    for m,l in itertools.product(range(N), range(N)):
-        EE[m, l] = 1/(2 - E[m] - E[l])
-    M = np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0, D, WV, Vinv, WV, Vinv, EE)
-    return y_0 + (1/(2*np.pi))*M
-
 def loop_correction(W,  y_0, b):
+    ''' Given a connectivity matrix W, tree level rate y_0 (outout of y_0_quad), and input b, 
+    returns the one loop correction to the firing rates
+    '''
     N = W.shape[0]
   
     W_lin = W * (2*(W@y_0+b))[...,None]
@@ -90,82 +59,49 @@ def loop_correction(W,  y_0, b):
     M = np.einsum("k, ij, jl, lk, jm, mk, lm -> i", y_0, D, WV, Vinv, WV, Vinv, EE)
     return (1/(2*np.pi))*M
 
-def c_ij_pred(J, Ns, p, y):
-    #y = y_pred(J, Ns, p, y0)
+def y_corrected_quad(W,  y_0, b):
+    ''' Given a connectivity matrix W, tree level rate y_0 (outout of y_0_quad), and input b, 
+    returns the estimate of the firing rates using the one-loop correction
+    '''
+    return y_0 + loop_correction(W, y_0,b)
+
+
+def cor_pred(J, Ns, y):
+    '''Computes the population-level correlation, i.e. the mean correlation, i.e. C[i,j] gives the mean 
+    correlation between a neuron in population i and a distinct neuron in population j
+
+    J: 6x6 regional connectivity matrix. 
+    Ns: number of neurons in each region
+    y: population mean rates  
+
+     '''
+    off_diag, diag  = c_ij_pred(J, Ns, y)
+    C = (1/np.sqrt(diag)) *off_diag * (1/(np.sqrt(diag)))[...,None]
+    return C
+
+def c_ij_pred(J, Ns, y):
+    '''Helper function for cor_pred. Computes the mean-field off-diagonal and diagonal covariance
+    Inputs:  
+    J: 6x6 regional connectivity matrix 
+    Ns: number of neurons in each region
+    y: population mean rates      
+    '''
     C_off_diag = np.zeros((len(Ns), len(Ns)))
     C_diag = np.zeros(len(Ns))
-    C_off_diag = C_pred_off_diag(J, Ns, p, y)
+    C_off_diag = C_pred_off_diag(J, Ns, y)
     for i in range(len(Ns)):
         C_diag[i] = C_off_diag[i, i] + y[i]
-
     C_pair = namedtuple("C_pair", "off_diag diag") 
     result = C_pair(C_off_diag, C_diag)
     return result
 
-def cor_pred(J, Ns, y0):
-    off_diag, diag  = c_ij_pred(J, Ns, 1, y0)
-    return (1/np.sqrt(diag)) *off_diag * (1/(np.sqrt(diag)))[...,None]
-
-def length_1_full(W, y0, index_dict):
-    N = W.shape[0]
-    B = np.linalg.inv(np.identity(N) - W)
-    if len(np.shape(y0)) == 0:
-        y = y0 * np.ones(N)
-    elif len(y0) == N:
-        y = y0
-    else:
-        raise Exception("input y0 must either be a scalar, or match shape of matrix J")
-    y = B @ y
-    Y = np.diag(y)
-    C =  Y + W @ Y + Y @ W.T + W @ Y @ W.T
-    return C
-
-def length_1_offdiag_cov(W, Ns, y):
-    N = W.shape[0]
-    y_norm = y/N
-    Y = np.diag(y_norm)
-    Cov =   W @ Y + Y @ W.T + W @ Y @ W.T
-    return Cov
-
-def length_1_cor(W, Ns, y):
-    Cov = length_1_offdiag_cov(W, Ns, y)
-    var = np.diag(Cov) + y
-    return (1/np.sqrt(var)) * Cov * (1/(np.sqrt(var)))[...,None]
-
-
-def overall_cor_pred(J, Ns, p, y0):
-    C = np.zeros((len(Ns), len(Ns)))
-    C_off_diag, C_diag = c_ij_pred(J, Ns, p, y0)
-    for i in range(len(Ns)):
-        for j in range(len(Ns)):
-            if i != j:
-                C[i,j] = C_off_diag[i,j]*Ns[i] * Ns[j]
-            else:
-                C[i,j] = C_off_diag[i,j] * Ns[i] * (Ns[j] -1) + Ns[i] * C_diag[i]
-    return C
-
-def cor_from_full_connectivity(W, y0, index_dict):
-    N = W.shape[0]
-    if len(np.shape(y0)) == 0:
-        y = y0 * np.ones(N)
-    elif len(y0) == N:
-        y = y0
-    else:
-        raise Exception("input y0 must either be a scalar, or match shape of matrix W")
-    n = W.shape[0]
-    B = np.linalg.inv(np.identity(n) - W)
-    y = B @ y
-    C = B @ np.diag(y) @ B.T
-    return C
-
-def covariance_full(W, y):
-    n = W.shape[0]
-    B = np.linalg.inv(np.identity(n) - W)
-    C = B @ np.diag(y) @ B.T
-    return C
-
-#this is the version we actually use 
-def C_pred_off_diag(J, Ns, p, y0):
+def C_pred_off_diag(J, Ns, y0):
+    '''Helper function for cor_pred. Computes the mean-field off-diagonal covariance
+    Inputs:  
+    J: 6x6 regional connectivity matrix 
+    Ns: number of neurons in each region
+    y: population mean rates      
+    '''
     N = J.shape[0]
     if len(np.shape(y0)) == 0:
         y = y0 * np.ones(N)
@@ -173,53 +109,42 @@ def C_pred_off_diag(J, Ns, p, y0):
         y = y0
     else:
         raise Exception("input y0 must either be a scalar, or match shape of matrix J")
-    D = np.linalg.inv(np.identity(N) - J_eff(J, Ns, p))
+    D = np.linalg.inv(np.identity(N) - J)
    # y =D @ y 
     Y = np.diag(y)
     return D @ Y @ (D @ np.diag(1/Ns)).T - np.diag(1/Ns) * Y
 
-def rates_with_noisy_tagging(r_E, r_P, p_E, p_P, p_FP, p_FN):
-    p_TP = 1- p_FN #true positive: probability tagged given engram
-    p_TN = 1 - p_FP #true negativeL probability not tagged given not engram 
-    p_EgT = p_E*p_TP/(p_E*p_TP + p_P*p_FP) #probability engram given tagged 
-    p_EgNT = p_E*p_FP/(p_E*p_FP + p_P*p_TN) #probability engram givne non-tagged 
-    p_PgT = 1 -  p_EgT  #probability non engram given tagged 
-    p_PgNT =  1 -  p_EgNT #probability non engram given non-tagged 
 
-    r_tagged =  p_EgT*r_E +  p_PgT *r_P 
-    r_non_tagged = p_EgNT*r_E + p_PgNT *r_P
-    return r_tagged, r_non_tagged
 
-def cor_with_noisy_tagging(c_EE, c_PE, c_PP, p_E, p_P, p_FP,  p_FN):
-    p_TP = 1- p_FN #true positive: probability tagged given engram
-    p_TN = 1 - p_FP #true negativeL probability not tagged given not engram 
-    p_EgT = p_E*p_TP/(p_E*p_TP + p_P*p_FP) #probability engram given tagged 
-    p_EgNT = p_E*p_FP/(p_E*p_FP + p_P*p_TN) #probability engram givne non-tagged 
-    p_PgT = 1 -  p_EgT  #probability non engram given tagged 
-    p_PgNT =  1 -  p_EgNT #probability non engran given non-tagged 
+def covariance_full(J, y):
+    '''Neuron level (N x N) covariance. 
+    J: Neuron level connectivity matrix
+    y: Neuron level rates
+    '''
+    n = J.shape[0]
+    B = np.linalg.inv(np.identity(n) - J)
+    C = B @ np.diag(y) @ B.T
+    return C
 
-    c_TT = (p_EgT**2)*c_EE + (2*p_EgT*p_PgT) *c_PE  + (p_PgT**2)*c_PP
-    c_NT = (p_EgNT*p_EgT)*c_EE + (p_PgNT*p_EgT + p_EgNT*p_PgT)*c_PE + (p_PgT*p_PgNT)*c_PP
-    c_NN = (p_EgNT**2)*c_EE + (2*p_EgNT*p_PgNT) *c_PE  + (p_PgNT**2)*c_PP
-    return c_TT, c_NT, c_NN
-
-def find_iso_rate(y, h, J, g, g_ii, b, h_i_min, h_i_max,type, n_points = 200):
-    h_is = np.linspace(h_i_min, h_i_max, n_points)
-    y_hs = np.zeros(n_points)
-    for i, h_i in enumerate(h_is): 
-        if type == "linear":
-            y_h =  y_pred(macro_weights(J, h,h ,g, h_i, g_ii),  b)[3]
-            y_hs[i] = y_h
-        elif type == "quadratic": 
-            y_h = y_0_quad(macro_weights(J, h,h ,g, h_i, g_ii),  b, steps = 500)[3]
-            y_hs[i] = y_h
-        if y_h <= y:
-            return h_i
-
-    return h_is[n_points-1]
 
 
 def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_points = 200):
+    '''Computes the level of inhibitory plasticitiy needed to keep engram rates in CA1 and CA3 constant
+    Inputs: 
+    yca1: target rate in CA1 engram cells
+    yca3: target rate in CA3 engram cells
+    h: engram strength 
+    J0: overall connectivity strenght 
+    g: inhibition strength 
+    g_ii: inhibition onto the inhibition
+    h_i_min: minimum value of inhibitory plasticity
+    h_i_max: maxium value of inhibitiory plasticity
+    type: "linear" or "quadratic"
+    n_points: number of grid points to use for search
+
+    returns (h_i1, h_i3) : inhibitory plasticity onto CA1 Engram, CA3 engram. Engram inhibition is multiplied, i.e. 
+    inhibition onto the engram cells is -g * h_i1 in CA1, -g * h_i3 in CA3 
+    '''
     h_is = np.linspace(h_i_min, h_i_max, n_points)
     y_hs = np.zeros(n_points)
     #first, match ca3
@@ -250,7 +175,20 @@ def find_iso_rate_ca3(yca1, yca3, h, J0, g, g_ii, b, h_i_min, h_i_max,type, n_po
     return (h_is[n_points-1], h_is[n_points-1])
 
 
-def find_iso_rate_input(target_rate, J, b, b0_min = .1, b0_max = 5, p=2, n_points = 200, plot = True):
+def find_iso_rate_input_old(target_rate, J, b, b0_min = .1, b0_max = 5, p=2, n_points = 200, plot = False):
+    '''Computes the level of increased input to excitatory neurons needed to bring excitatory firing rates 
+    to a target rate
+    target_rate: target rate of CA1 engram cells
+    J: 6 by 6 connectivity matrix 
+    b: basline input 
+    b_0_min: minimum extra input for excitatory neurons
+    b_0_max: maximum extra input for excitatory neurons
+    p: degree (1 or 2)
+    n_points: number of grid points to use for search
+    plot: boolean, for whether to plot curve of rate vs. target rate (for debugging)
+
+    returns b_new: input so that the engram rates match the target_rate 
+    '''
     b0s =  np.linspace(b0_min, b0_max, n_points)
     y_hs = np.zeros(n_points)
     for i, b0 in enumerate(b0s): 
@@ -290,20 +228,67 @@ def find_iso_rate_input(target_rate, J, b, b0_min = .1, b0_max = 5, p=2, n_point
     return b_new
 
 
-def fp_and_lin(J0, g, h, b, N,  p = 2):
-    J = macro_weights(J = J0, h3 = h, h1 = h, g = g)
-    if p == 2:
-        r = y_0_quad(J, b)
-        gain =  2*(J@r+b)
-        J_lin =J* gain[...,None]
-    else: 
-        J_lin = J
-        r = np.linalg.inv(np.eye(6) - J_lin)@ b
-    return r, J_lin
+def find_iso_rate_input(target_rate_1, target_rate_3, J, b, b0_min = .1, b0_max = 5, p=2, n_points = 200, plot = False):
+    '''Computes the level of increased input to excitatory neurons needed to bring excitatory firing rates 
+    to a target rate
+    target_rate: target rate of CA1 engram cells
+    J: 6 by 6 connectivity matrix 
+    b: basline input 
+    b_0_min: minimum extra input for excitatory neurons
+    b_0_max: maximum extra input for excitatory neurons
+    p: degree (1 or 2)
+    n_points: number of grid points to use for search
+    plot: boolean, for whether to plot curve of rate vs. target rate (for debugging)
+
+    returns b_new: input so that the engram rates match the target_rate 
+    '''
+    b0s =  np.linspace(b0_min, b0_max, n_points)
+    y_hs = np.zeros(n_points)
+    for i, b0 in enumerate(b0s):  #outer loop: CA3
+        b_new = np.copy(b)
+        b_new[0:2] += b0
+        #b_new[3:5] += b0 
+        if p == 1:
+            y_h =  y_pred(J,  b_new)[0]
+            y_hs[i] = y_h
+        elif p== 2: 
+            y =  y_0_quad(J,  b_new, steps = 500)
+            correction = np.real(loop_correction(J,  y, b_new))
+            y_corrected = y + correction 
+            y_h = y_corrected[0]
+            y_hs[i] = y_h
+        if y_h >= target_rate_3:
+            for i, b0 in enumerate(b0s):  #outer loop: CA3
+                b_new[3:5] += b0
+                if p == 1:
+                    y_h =  y_pred(J,  b_new)[3]
+                    y_hs[i] = y_h
+                elif p== 2: 
+                    y =  y_0_quad(J,  b_new, steps = 500)
+                    correction = np.real(loop_correction(J,  y, b_new))
+                    y_corrected = y + correction 
+                    y_h = y_corrected[3]
+                    y_hs[i] = y_h
+                if y_h >= target_rate_1:
+                    print(f"from loop {i}")
+                    return b_new
+            return b_new
+    print("at return")
+    b_new = np.copy(b)
+    b_new[0:2] +=  b0s[n_points-1]
+    b_new[3:5] +=  b0s[n_points-1]
+
+    return b_new
+
    
 
 
-def CA3_prop(J, r, b, N, nterms = None, p = 2):
+def CA3_prop(J, r, b, nterms = None):
+    '''Propagator for CA3 only. In quadratic model
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           '''
     gain =  2*(J@r+b)
     J_lin =J* gain[...,None]
     J_CA3 = J_lin[:3, :3]
@@ -316,7 +301,12 @@ def CA3_prop(J, r, b, N, nterms = None, p = 2):
     return Delta
 
 
-def CA1_prop(J, r, b, N, nterms = None, p = 2):
+def CA1_prop(J, r, b, nterms = None):
+    '''Propagator for CA1 only. In quadratic model 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           '''
     gain =  2*(J@r+b)
     J_lin =J* gain[...,None]
     J_CA1 = J_lin[3:, 3:]
@@ -329,49 +319,99 @@ def CA1_prop(J, r, b, N, nterms = None, p = 2):
     return Delta
 
 
-def CA1_internal_cov(J, r, b, N, nterms = None, p = 2):
+def CA1_internal_cov(J, r, b, N, nterms = None):
+    '''Internally generated population covariance in CA1. 
+    Includes contributions from diagonal entries, ie. each neuron's variance driven by its rate. 
+     In quadratic model 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+           '''
     R = np.diag(r/N)
     R1 = R[3:, 3:]
-    D_11 = CA1_prop(J, r, b, N, nterms =nterms, p = p)
+    D_11 = CA1_prop(J, r, b, nterms =nterms)
     return D_11 @ R1 @ D_11.T
 
-def CA1_internal_cov_offdiag(J, r, b, N, nterms = None, p = 2):
+def CA1_internal_cov_offdiag(J, r, b, N, nterms = None):
+    '''Internally generated population covariance in CA1. 
+    Does not include contributions from diagonal entries, ie. each neuron's variance driven by its rate. 
+     In quadratic model 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+           '''
     R = np.diag(r/N)
     R1 = R[3:, 3:]
-    D_11 = CA1_prop(J, r, b, N, nterms =nterms, p = p)
+    D_11 = CA1_prop(J, r, b, nterms =nterms)
     return D_11 @ R1 @ D_11.T - R1
 
-def CA3_internal_cov(J, r, b, N, nterms = None, p = 2):
+def CA3_internal_cov(J, r, b, N, nterms = None):
+    '''Internally generated population covariance in CA3. 
+    Includes contributions from diagonal entries, ie. each neuron's variance driven by its rate. 
+     In quadratic model 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+    '''
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b, nterms =nterms)
     return (D_33 @ R3 @ D_33.T)
 
 
-def CA1_inherited_cov(J, r, b, N, nterms = None, p = 2):
-    C_33 = CA3_internal_cov(J, r, b, N, nterms = nterms, p = p)
+def CA1_inherited_cov(J, r, b, N, nterms = None):
+    '''Covariance in CA1 inherited from CA3.
+     In quadratic model 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+    '''
+    C_33 = CA3_internal_cov(J, r, b, N, nterms = nterms)
     gain =  2*(J@r+b)
     J_lin =J* gain[...,None]
     J_13 = J_lin[3:, :3]
-    D_11 = CA1_prop(J, r, b, N, nterms = nterms, p = p)
+    D_11 = CA1_prop(J, r, b,  nterms = nterms)
     return (D_11 @ J_13 @ C_33 @ J_13.T @ D_11.T)
 
 
 
-def CA3_E_from_E(J, r, b, N, nterms = None, p = 2):
+def CA3_E_from_E(J, r, b, N, nterms = None):
+    '''Covariance in CA3 engram cells originating from CA3 engram cells. 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+    '''
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b,  nterms =nterms)
     return D_33[0,0]**2 * R3[0,0]
 
-def CA3_E_from_N(J, r, b, N, nterms = None, p = 2):
+
+def CA3_E_from_N(J, r, b, N, nterms = None):
+    '''Covariance in CA3 engram cells originating from CA3 non-engram cells. 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+    '''
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b,  nterms =nterms)
     return D_33[0,1]**2 * R3[1,1]
 
-def CA3_E_from_I(J, r, b, N, nterms = None, p = 2):
+def CA3_E_from_I(J, r, b, N, nterms = None):
+    '''Covariance in CA3 engram cells originating from CA3 inhibitory cells. 
+    Input: J: connectivity matrix (not already linearized)
+           r: rate
+           b: input
+           N: number of neurons in each region
+    '''
     R = np.diag(r/N)
     R3 = R[:3, :3]
-    D_33 = CA3_prop(J, r, b, N, nterms =nterms, p = p)
+    D_33 = CA3_prop(J, r, b,  nterms =nterms)
     return D_33[0,2]**2 * R3[2,2]

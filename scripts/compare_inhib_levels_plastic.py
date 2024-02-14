@@ -8,10 +8,9 @@ import os
 
 from src.simulation import sim_glm_pop
 from src.theory import   y_0_quad,  find_iso_rate_input, cor_pred, loop_correction, find_iso_rate_ca3
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
-from src.plotting import raster_plot
+from src.correlation_functions import rate, two_pop_correlation, mean_pop_correlation, sum_by_region
+from src.generate_connectivity import  gen_adjacency, hippo_weights, macro_weights
+
 
 
 # generate adjacency matrix 
@@ -73,7 +72,7 @@ for trial in range(4):
     y_baseline += np.real(loop_correction(J_baseline, y_baseline, b_small))
     for g in gs:
         J_small =macro_weights(J=J0, h3 = 1, h1 =1, g =g)
-        b_iso =find_iso_rate_input(target_rate= y_baseline[3], J = J_small, b = b_small, b0_min = 0, b0_max = 1, n_points=1000, plot = False)
+        b_iso =find_iso_rate_input(target_rate_1= y_baseline[3], target_rate_3=y_baseline[0], J = J_small, b = b_small, b0_min = 0, b0_max = 1, n_points=1000, plot = False)
         y_baseline_new = y_0_quad(J_small, b_iso)
         y_baseline_new += np.real(loop_correction(J_small,  y_baseline_new, b_iso))
 
@@ -94,7 +93,7 @@ for trial in range(4):
             gain =  2*(J_small@y_corrected+ b_iso)
             J_lin =J_small* gain[...,None]
             D = np.linalg.inv(np.eye(6) - J_lin)
-            pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y0 = y_corrected)
+            pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y= y_corrected)
             cors_ee.append(pred_cors[3,3])
             cors_en.append(pred_cors[3,4])
             cors_nn.append(pred_cors[4,4])

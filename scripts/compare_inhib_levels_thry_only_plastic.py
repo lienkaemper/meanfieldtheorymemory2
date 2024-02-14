@@ -6,13 +6,11 @@ import pickle as pkl
 import gc
 import os
 
-from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad, find_iso_rate_input, cor_pred, loop_correction, find_iso_rate_ca3
+
+from src.theory import  y_0_quad, find_iso_rate_input, cor_pred, loop_correction, find_iso_rate_ca3
 from src.theory import CA1_internal_cov_offdiag, CA1_inherited_cov, CA3_internal_cov, CA3_E_from_E, CA3_E_from_N, CA3_E_from_I
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
-from src.plotting import raster_plot
+from src.correlation_functions import  sum_by_region
+from src.generate_connectivity import  gen_adjacency, hippo_weights, macro_weights
 
 
 # generate adjacency matrix 
@@ -37,6 +35,7 @@ A, index_dict = gen_adjacency(cells_per_region, macro_connectivity)
 
 with open("../results/compare_inhib_levels/index.pkl", "wb") as f:
     pkl.dump(obj = index_dict, file = f)
+
 
 
 #simulation parameters 
@@ -75,9 +74,9 @@ from_CA3N =[]
 
 for g in gs:
     J_small =macro_weights(J=J0, h3 = 1, h1 =1, g =g)
-    b_iso =find_iso_rate_input(target_rate= y_baseline[3], J = J_small, b = b_small, b0_min = 0, b0_max = 1, n_points=1000, plot=False)
+    b_iso =find_iso_rate_input(target_rate_1= y_baseline[3], target_rate_3=y_baseline[0], J = J_small, b = b_small, b0_min = 0, b0_max = .5, n_points=2000, plot=False)
     for h in [1,2]:
-        h_i1, h_i3  = find_iso_rate_ca3(y_baseline[3],y_baseline[0], h=h, J0 = J0, g=g, g_ii=g_ii, b = b_iso, h_i_min = 1, h_i_max = 4, type = "quadratic", n_points = 1000)
+        h_i1, h_i3  = find_iso_rate_ca3(y_baseline[3],y_baseline[0], h=h, J0 = J0, g=g, g_ii=g_ii, b = b_iso, h_i_min = 1, h_i_max = 2, type = "quadratic", n_points = 1000)
         h_list.append(h)
         g_list.append(g)
         J =  hippo_weights(index_dict, A, h3 = h, h1 = h, g = g, J = J0,  g_ii = 1, i_plast = h_i1, i_plast_3=h_i3)
@@ -93,7 +92,7 @@ for g in gs:
         gain =  2*(J_small@y_corrected+ b_iso)
         J_lin =J_small* gain[...,None]
         D = np.linalg.inv(np.eye(6) - J_lin)
-        pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y0 = y_corrected)
+        pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y = y_corrected)
         cors_ee.append(pred_cors[3,3])
         cors_en.append(pred_cors[3,4])
         cors_nn.append(pred_cors[4,4])

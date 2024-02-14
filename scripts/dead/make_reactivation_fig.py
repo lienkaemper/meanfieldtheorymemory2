@@ -7,10 +7,10 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
+from src.theory import y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred
+from src.correlation_functions import mean_by_region,  sum_by_region
+from src.plotting import raster_plot
+from src.generate_connectivity import gen_adjacency, hippo_weights
 
 plt.style.use('paper_style.mplstyle')
 

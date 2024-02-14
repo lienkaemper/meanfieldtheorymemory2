@@ -7,11 +7,7 @@ import gc
 import os
 import itertools
 
-from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad, find_iso_rate_input, cor_pred, CA1_internal_cov, CA1_internal_cov_offdiag,  CA3_internal_cov, CA1_inherited_cov,  CA3_E_from_E, CA3_E_from_N, CA3_E_from_I
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
+
 from src.plotting import raster_plot
 plt.style.use('paper_style.mplstyle')
 size = 20
@@ -26,8 +22,8 @@ N = np.sum(cells_per_region)
 with open("../results/compare_inhib_levels/df.pkl", "rb") as f:
     df = pkl.load(f)
 
-with open("../results/compare_inhib_levels/raw_theory_df.pkl", "rb") as f:
-    raw_theory_df = pkl.load(f)
+with open("../results/compare_inhib_levels/raw_df.pkl", "rb") as f:
+    raw_df = pkl.load(f)
 
 with open("../results/compare_inhib_levels/theory_df.pkl", "rb") as f:
     theory_df = pkl.load(f)
@@ -42,29 +38,28 @@ CA1 = list(itertools.chain(index_dict["CA1E"], index_dict["CA1P"]))
 all_neurons = range(N)
 
 
-with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,1), "rb") as f:
-    spktimes_high_before = pkl.load(f)
+# with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,1), "rb") as f:
+#     spktimes_high_before = pkl.load(f)
 
-with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,2), "rb") as f:
-    spktimes_high_after = pkl.load(f)
-
-
-
-
-fig, axs = plt.subplot_mosaic([["b", "b", "c", "c"], 
-                               ["d", "e", "f", "g"], 
-                               ["h", "i", "j", "k"]], figsize = (6, 6), height_ratios = [1.5, 1, 1])
-
-yticks = [r[0] for r in index_dict.values()]
+# with open("../results/compare_inhib_levels/spktimes_g={}h={}.pkl".format(3.0,2), "rb") as f:
+#     spktimes_high_after = pkl.load(f)
 
 
 
-raster_plot(spktimes =spktimes_high_before, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["b"], yticks=yticks)
-#axs["b"].set_title("g = 4, h = 1")
-raster_plot(spktimes =spktimes_high_after, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["c"], yticks=yticks)
-#axs["c"].set_title("g = 4, h = 2")
 
-baseline_df = raw_theory_df.loc[raw_theory_df["g"] ==1]
+fig, axs = plt.subplot_mosaic([["a", "a", "b", "c"], 
+                               ["d", "e", "f", "g"]], figsize = (6, 3), height_ratios = [1.5, 1, 1])
+
+# yticks = [r[0] for r in index_dict.values()]
+
+
+
+# raster_plot(spktimes =spktimes_high_before, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["b"], yticks=yticks)
+# #axs["b"].set_title("g = 4, h = 1")
+# raster_plot(spktimes =spktimes_high_after, neurons = all_neurons, t_start  = 0, t_stop = 500, ax = axs["c"], yticks=yticks)
+# #axs["c"].set_title("g = 4, h = 2")
+
+baseline_df = raw_df.loc[raw_df["g"] ==1]
 baseline_df = baseline_df.loc[:, ["h", "pred_cor_engram_vs_engram", "pred_cor_engram_vs_non_engram","pred_cor_non_engram_vs_non_engram" ]]
 
 baseline_df = baseline_df.melt(id_vars=['h'], var_name='region', value_name='correlation')
@@ -147,19 +142,16 @@ axs["g"].get_legend().remove()
 
 
 decomp_df["CA3_total"] = decomp_df["from_CA3E"] + decomp_df["from_CA3N"] + decomp_df["from_CA3I"]
-
+decomp_df["CA3_ext"] = decomp_df["from_CA3E"] + decomp_df["from_CA3N"] 
 sns.lineplot(data = decomp_df, x = "g", y = "CA3_total", style="h", color= "black", ax = axs["h"])
 axs["h"].set_title("Total")
 
-sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3E", style = "h", color =  "#F37343", ax = axs["i"] )
+sns.lineplot(data = decomp_df, x = "g", y =  "CA3_ext", style = "h", ax = axs["i"] )
 axs["i"].set_title("Engram")
 axs["i"].sharey(axs["h"])
 
-sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3N", style = "h", color = "#06ABC8" ,ax = axs["j"] )
-axs["j"].set_title("Non-engram")
-axs["j"].sharey(axs["h"])
 
-sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3I", style = "h", color =  "black" ,ax = axs["k"] )
+sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3I", style = "h", ax = axs["i"] )
 axs["k"].sharey(axs["h"])
 #axs["k"].yaxis.set_ticklabels([])
 

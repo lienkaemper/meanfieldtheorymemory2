@@ -62,8 +62,7 @@ def tot_cross_covariance_matrix(spktimes, inds, dt, tstop):
                 C[c_j,c_i] = C[c_i, c_j]
     return C
 
-def tot_cross_covariance_matrix_faster(spktimes, inds, dt, tstop):
-    x = np.zeros((len(inds),))
+
 
 def create_pop_spike_train(spktimes, neurons, dt=.01, tstop=100):
     Nt = int(tstop/dt)+1

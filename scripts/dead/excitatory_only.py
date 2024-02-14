@@ -7,7 +7,7 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad
+from src.theory import  covariance_full,  y_0_quad
 from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor
 from src.plotting import raster_plot, abline
 from src.generate_connectivity import excitatory_only

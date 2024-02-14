@@ -6,12 +6,10 @@ import pickle as pkl
 import gc
 import os
 
-from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad,  find_iso_rate, y_corrected_quad, find_iso_rate_input, cor_pred, loop_correction
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
-from src.plotting import raster_plot
+
+from src.theory import  y_0_quad,  cor_pred, loop_correction
+from src.correlation_functions import  sum_by_region
+from src.generate_connectivity import gen_adjacency, hippo_weights, macro_weights
 
 
 # generate adjacency matrix 
@@ -83,7 +81,7 @@ for g in gs:
 
         gain =  2*(J_small@y_corrected+ b_small)
         J_lin =J_small* gain[...,None]
-        pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y0 =y_corrected)
+        pred_cors = cor_pred( J = J_lin , Ns = cells_per_region, y =y_corrected)
         cors_ee.append(pred_cors[3,3])
         cors_en.append(pred_cors[3,4])
         cors_nn.append(pred_cors[4,4])
@@ -127,4 +125,3 @@ for column in columns_to_process:
 with open("../results/compare_inhib_levels/theory_df.pkl", "wb") as f:
     pkl.dump(obj = df, file = f)
 
-print(df)

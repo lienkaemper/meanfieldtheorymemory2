@@ -7,14 +7,12 @@ import gc
 import os
 
 from src.simulation import sim_glm_pop
-from src.theory import y_pred_full, covariance_full,  y_0_quad, find_iso_rate, find_iso_rate_input, cor_pred, find_iso_rate_ca3
-from src.correlation_functions import rate, mean_by_region, tot_cross_covariance_matrix, two_pop_correlation, mean_pop_correlation, cov_to_cor, sum_by_region
-from src.plotting import raster_plot, abline
-from src.generate_connectivity import excitatory_only, gen_adjacency, hippo_weights, macro_weights
+from src.theory import  y_0_quad,  find_iso_rate_input, cor_pred, find_iso_rate_ca3
+from src.correlation_functions import  mean_by_region, sum_by_region
+from src.plotting import raster_plot
+from src.generate_connectivity import gen_adjacency, hippo_weights
 
 plt.style.use('paper_style.mplstyle')
-
-
 
 
 N_E = 60
@@ -132,7 +130,7 @@ for i, stim in enumerate(stims):
     b_stim[:int(N_E/2)] += stim
     rates = y_0_quad(J, b_stim)
     result[:, i] = mean_by_region(rates, index_dict)
-    pred_cors = cor_pred( J = J_small , Ns = cells_per_region, y0 =result[:,i])
+    pred_cors = cor_pred( J = J_small , Ns = cells_per_region, y =result[:,i])
     result_cors[:, i] = np.array([pred_cors[3,3], pred_cors[3,4], pred_cors[4,4]])
 
 axs[1,0].plot(stims, result[3, :].T, color = "#F37343", label = "Engram")
@@ -195,7 +193,7 @@ for i, stim in enumerate(stims):
     b_stim[:int(N_E/2)] += stim
     rates = y_0_quad(J, b_stim)
     result[:, i] = mean_by_region(rates, index_dict)
-    pred_cors = cor_pred( J = J_small , Ns = cells_per_region, y0 =result[:,i])
+    pred_cors = cor_pred( J = J_small , Ns = cells_per_region, y=result[:,i])
     result_cors[:, i] = np.array([pred_cors[3,3], pred_cors[3,4], pred_cors[4,4]])
 
 axs[1,1].plot(stims, result[3, :].T, color = "#F37343", label = "Engram")
