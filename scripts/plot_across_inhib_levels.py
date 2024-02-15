@@ -48,7 +48,7 @@ all_neurons = range(N)
 
 
 fig, axs = plt.subplot_mosaic([["a", "a", "b", "c"], 
-                               ["d", "e", "f", "g"]], figsize = (6, 3), height_ratios = [1.5, 1, 1])
+                               ["d", "e", "f", "g"]], figsize = (7.2, 4))
 
 # yticks = [r[0] for r in index_dict.values()]
 
@@ -64,21 +64,21 @@ baseline_df = baseline_df.loc[:, ["h", "pred_cor_engram_vs_engram", "pred_cor_en
 
 baseline_df = baseline_df.melt(id_vars=['h'], var_name='region', value_name='correlation')
 
-print(baseline_df.head())
-sns.barplot(data = baseline_df, x = "region", hue = "h", y = "correlation", ax = axs["d"])
-axs["d"].get_legend().remove()
-axs["d"].set(xticklabels=[])
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["e"], color = "#F37343", label = "Engram vs. engram")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_ratio", ax = axs["e"], s = size, color = "#F37343")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["e"], label = "Engram vs. non-engram", color = "#FEC20E")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_ratio", ax = axs["e"], s = size, color = "#FEC20E")
-sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["e"], label = "Non-engram vs. non-engram", color = "#06ABC8")
-sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_ratio", ax = axs["e"], s = size, color = "#06ABC8")
-axs["e"].set_xlim([1,3])
-axs["e"].set_title("Correlation ratio")
-axs["e"].set_xlabel("Inhibition strength: g")
-axs["e"].set_ylabel("Correlation ratio")
-axs["e"].get_legend().remove()
+
+sns.barplot(data = baseline_df, x = "region", hue = "h", y = "correlation", ax = axs["b"])
+axs["b"].get_legend().remove()
+axs["b"].set(xticklabels=[])
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_engram_ratio", ax = axs["c"], color = "#F37343", label = "Engram vs. engram")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_engram_ratio", ax = axs["c"], s = size, color = "#F37343")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_engram_vs_non_engram_ratio", ax = axs["c"], label = "Engram vs. non-engram", color = "#FEC20E")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_engram_vs_non_engram_ratio", ax = axs["c"], s = size, color = "#FEC20E")
+sns.lineplot(data = theory_df, x = "g", y = "pred_cor_non_engram_vs_non_engram_ratio", ax = axs["c"], label = "Non-engram vs. non-engram", color = "#06ABC8")
+sns.scatterplot(data = df, x = "g", y = "sim_cor_non_engram_vs_non_engram_ratio", ax = axs["c"], s = size, color = "#06ABC8")
+axs["c"].set_xlim([1,3])
+axs["c"].set_title("Correlation ratio")
+axs["c"].set_xlabel("Inhibition strength: g")
+axs["c"].set_ylabel("Correlation ratio")
+axs["c"].get_legend().remove()
 
 
 
@@ -124,35 +124,36 @@ nterms = 2
 #decomp_df = pd.DataFrame({"g" : g_list, "h" : h_list, "CA1_internal" :  CA1_internal, "CA1_inherited" : CA1_inherited, "CA3" : CA3})
 
 
-sns.lineplot(data = decomp_df, x = "g", y = "CA1_internal", color = 'blue', style = "h", ax=axs["f"])
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_internal", color = 'blue', style = "h", ax=axs["d"])
 
-sns.lineplot(data = decomp_df, x = "g", y = "CA1_inherited", color = "green", style = "h", ax=axs["f"])
-axs["f"].get_legend().remove()
-axs["f"].set_xlabel("Inhibitory strength g")
-axs["f"].set_ylabel("Covariance")
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_inherited", color = "green", style = "h", ax=axs["d"])
+axs["d"].get_legend().remove()
+axs["d"].set_xlabel("Inhibitory strength g")
+axs["d"].set_ylabel("Covariance")
 
 decomp_df["CA1_total"] = decomp_df["CA1_internal"] + decomp_df["CA1_inherited"] 
-sns.lineplot(data = decomp_df, x = "g", y = "CA1_total", style = "h", color = "black", ax=axs["g"])
+sns.lineplot(data = decomp_df, x = "g", y = "CA1_total", style = "h", color = "black", ax=axs["e"])
 #axs[1].plot(gs, inherited_after_fixed, color ="black", linestyle = "--", label = "after, CA3 fixed")
-axs["g"].set_title("Total")
-axs["g"].legend()
-axs["g"].sharey(axs["f"])
-axs["g"].get_legend().remove()
+axs["e"].set_title("Total")
+axs["e"].legend()
+axs["e"].sharey(axs["d"])
+axs["e"].get_legend().remove()
 
 
 
 decomp_df["CA3_total"] = decomp_df["from_CA3E"] + decomp_df["from_CA3N"] + decomp_df["from_CA3I"]
 decomp_df["CA3_ext"] = decomp_df["from_CA3E"] + decomp_df["from_CA3N"] 
-sns.lineplot(data = decomp_df, x = "g", y = "CA3_total", style="h", color= "black", ax = axs["h"])
-axs["h"].set_title("Total")
+sns.lineplot(data = decomp_df, x = "g", y = "CA3_total", style="h", color= "black", ax = axs["f"])
+axs["f"].set_title("Total")
+axs["f"].get_legend().remove()
 
-sns.lineplot(data = decomp_df, x = "g", y =  "CA3_ext", style = "h", ax = axs["i"] )
-axs["i"].set_title("Engram")
-axs["i"].sharey(axs["h"])
+sns.lineplot(data = decomp_df, x = "g", y =  "CA3_ext", style = "h", ax = axs["g"] )
+axs["g"].set_title("By source")
+axs["g"].sharey(axs["f"])
 
-
-sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3I", style = "h", ax = axs["i"] )
-axs["k"].sharey(axs["h"])
+sns.lineplot(data = decomp_df, x = "g", y =  "from_CA3I", style = "h", ax = axs["g"] )
+axs["g"].sharey(axs["f"])
+axs["g"].get_legend().remove()
 #axs["k"].yaxis.set_ticklabels([])
 
 

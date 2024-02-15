@@ -3,13 +3,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import pickle as pkl
-import gc
-import os
-import networkx as nx
 import sys
 
 
 from src.plotting import raster_plot
+from src.noisy_tagging import rates_with_noisy_tagging, cor_with_noisy_tagging
 
 plt.style.use('paper_style.mplstyle')
 engram_color =   "#F37343"
@@ -30,26 +28,6 @@ with open(dirname + "/param_dict.pkl", "rb") as file:
 
 ################################
 
-yticks = [r[0] for r in index_dict.values()]
-neurons = range(270)
-tstop = 250
-with open("../results/fig_1_data/spikes_h={}ext_only_low_inhib.pkl".format(1.0), "rb") as file:
-    spktimes = pkl.load(file)
-
-fig, ax = plt.subplots(figsize = (2.8, 2.1))
-raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks )
-sns.despine()
-plt.savefig("../results/fig_1_data/raster_h=1.pdf")
-plt.show()
-
-with open("../results/fig_1_data/spikes_h={}ext_only_low_inhib.pkl".format(2.0), "rb") as file:
-    spktimes = pkl.load(file)
-
-fig, ax = plt.subplots(figsize = (2.8, 2.1))
-raster_plot(spktimes, neurons, 0, tstop, ax = ax, yticks = yticks )
-sns.despine()
-plt.savefig("../results/fig_1_data/raster_h=2.pdf")
-plt.show()
 
 
 fig, axs = plt.subplots(2, 2, figsize = (7,4))
@@ -66,28 +44,52 @@ tstop = 500
 
 rate_df = pd.read_csv("../results/fig_1_data/rate_df_low_inhib.csv")
 cor_df = pd.read_csv("../results/fig_1_data/cor_df_low_inhib.csv")
+pred_rate_df = pd.read_csv("../results/fig_1_data/pred_rates.csv")
+pred_cor_df = pd.read_csv("../results/fig_1_data/pred_cors.csv")
 cor_df["regions"] = cor_df["region_i"] +"\n"+ cor_df["region_j"]
 
+####  applying the noisy tagging to rates from simulation ####
+p_FN = 0.0
+p_FP = .5
 
-pred_rate_df = pd.read_csv("../results/fig_1_data/pred_rates.csv")
+# Pivot the table
+pivot_rate_df = rate_df.pivot_table(index='h', columns='region', values='rate').reset_index()
+
+# Rename columns
+pivot_rate_df.columns.name = None  # To remove the 'region' label on top of the columns
+pivot_rate_df.columns = ['h', 'rate_engram', 'rate_non_engram']
+
+#apply noisy tagging
+pivot_rate_df[['tagged', 'non_tagged']] = pivot_rate_df.apply(lambda x: rates_with_noisy_tagging(x['rate_engram'], x['rate_non_engram'], p_FN = p_FN, p_FP = p_FP), axis=1).apply(pd.Series)
+noisy_rate_df = pivot_rate_df.loc[:, ['h', 'tagged', 'non_tagged']]
+
+#restore the dataframe back to original shape 
+noisy_rate_df = pd.melt(noisy_rate_df, id_vars='h', value_vars=[ 'tagged', 'non_tagged'], var_name='region', value_name='rate')
+
+
+####  applying the noisy tagging to rates from simulation ####
+print(pred_rate_df)
 pred_rate_df = pred_rate_df[pred_rate_df["region"].isin(["CA1E", "CA1P"])]
 baseline_rate = np.mean(pred_rate_df[pred_rate_df["h"] == 1]["pred_rate"])
 
 norm_pred_rate_df = pred_rate_df.copy()
 norm_pred_rate_df["pred_rate"] = norm_pred_rate_df["pred_rate"]/baseline_rate
 norm_rate_df = rate_df.copy()
-norm_rate_df["rate"] = rate_df["rate"]/baseline_rate
+norm_rate_df["rate"] = noisy_rate_df["rate"]/baseline_rate
 
-pred_cor_df = pd.read_csv("../results/fig_1_data/pred_cors.csv")
+
 pred_cor_df = pred_cor_df[pred_cor_df["region_i"].isin(["CA1E", "CA1P"])]
 pred_cor_df = pred_cor_df[pred_cor_df["region_j"].isin(["CA1E", "CA1P"])]
 pred_cor_df["regions"] = pred_cor_df["region_i"] +"\n"+ pred_cor_df["region_j"]
+
 sns.lineplot(data = pred_rate_df, x = "h", hue = "region", y = "pred_rate",  ax = axs[0,0], errorbar=None, palette= [engram_color, non_engram_color])
 sns.lineplot(data = pred_rate_df, x = "h", hue = "region", y = "reduced_rate",  ax = axs[0,0], errorbar=None, linestyle='--', palette= [engram_color, non_engram_color])
 
-sns.scatterplot(data= rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0], palette= [engram_color, non_engram_color])
+sns.scatterplot(data= noisy_rate_df, x = "h", hue = "region", y = "rate", ax = axs[0,0], palette= [engram_color, non_engram_color])
 axs[0,0].get_legend().remove()
 axs[0, 0].set_ylabel("normalized rate")
+plt.show()
+quit()
 
 sns.lineplot(data = pred_cor_df, x = "h", hue = "regions", y = "pred_cor",  ax = axs[0,1],errorbar=None, palette= [engram_color,  cross_color,non_engram_color])
 sns.scatterplot(data= cor_df, x = "h", hue = "regions", y = "correlation", ax = axs[0,1], palette= [engram_color,cross_color,  non_engram_color])

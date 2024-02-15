@@ -97,7 +97,7 @@ for h in h_range:
 print(len(reduced_rates))
 print(len(pred_rates))
 
-rate_df = pd.DataFrame({"pred_rate":pred_rates, "h" : h_list, "region": region_list ,  "reduced_rate": reduced_rates})
+rate_df = pd.DataFrame({"tree_rate":pred_rates, "h" : h_list, "region": region_list ,  "corr_rate": reduced_rates})
 cor_df = pd.DataFrame({"pred_cor": pred_cors, "region_i" : region_i_list, "region_j": region_j_list, "h": h_list_cor})
 print(rate_df)
 print(cor_df)
